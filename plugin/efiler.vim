@@ -1,0 +1,3 @@
+" efiler
+
+call efiler#enable()
