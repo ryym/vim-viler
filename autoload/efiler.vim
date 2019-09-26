@@ -77,12 +77,11 @@ function! s:register_props(files, buf, start_line, depth) abort
   let i = 0
   while i < len(a:files)
     let file = a:files[i]
-    let id = s:uid.get(file.abs_path())
     call prop_add(
       \   a:start_line + i, 1,
-      \   {'type': 'file', 'bufnr': a:buf, 'id': id},
+      \   {'type': 'file', 'bufnr': a:buf, 'id': file.id},
       \ )
-    let s:states[id] = {
+    let s:states[file.id] = {
       \   'file': file,
       \   'depth': a:depth,
       \   'tree': {'open': 0},
@@ -94,10 +93,12 @@ endfunction
 
 function! s:make_file(dir, name) abort
   let dir = a:dir[len(a:dir) - 1] == '/' ? a:dir : a:dir . '/'
-  let isdir = isdirectory(dir . a:name)
+  let abs_path = dir . a:name
+  let id = s:uid.get(abs_path)
+  let isdir = isdirectory(abs_path)
   let name = isdir ? a:name . '/' : a:name
 
-  let file = { 'dir': dir, 'name': name, 'isdir': isdir }
+  let file = { 'id': id, 'dir': dir, 'name': name, 'isdir': isdir }
 
   function! file.abs_path() abort
     return self.dir . self.name
