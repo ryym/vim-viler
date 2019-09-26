@@ -55,8 +55,8 @@ endfunction
 
 function! s:list_files(dir) abort
   let files = []
-  for abs_path in globpath(a:dir, '*', 0, 1)
-    let file = s:make_file(abs_path)
+  for name in readdir(a:dir)
+    let file = s:make_file(a:dir, name)
     call add(files, file)
   endfor
   return files
@@ -92,16 +92,10 @@ function! s:register_props(files, buf, start_line, depth) abort
   endwhile
 endfunction
 
-function! s:make_file(absolute_path) abort
-  let dir = fnamemodify(a:absolute_path, ':h')
-  if dir != '/'
-    let dir .= '/'
-  endif
-  let name = fnamemodify(a:absolute_path, ':t')
-  let isdir = isdirectory(a:absolute_path)
-  if isdir
-    let name .= '/'
-  endif
+function! s:make_file(dir, name) abort
+  let dir = a:dir[len(a:dir) - 1] == '/' ? a:dir : a:dir . '/'
+  let isdir = isdirectory(dir . a:name)
+  let name = isdir ? a:name . '/' : a:name
 
   let file = { 'dir': dir, 'name': name, 'isdir': isdir }
 
