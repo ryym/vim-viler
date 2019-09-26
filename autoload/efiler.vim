@@ -73,7 +73,7 @@ function! s:register_props(files, buf, start_line, depth) abort
     let s:states[id] = {
       \   'file': file,
       \   'depth': a:depth,
-      \   'tree': {'open': 0, 'size': -1},
+      \   'tree': {'open': 0},
       \ }
 
     let i += 1
@@ -142,26 +142,27 @@ function! efiler#_toggle_tree() abort
     call append(cur_line, filenames)
     call s:register_props(files, cur_buf, cur_line + 1, state.depth + 1)
     let state.tree.open = !state.tree.open
-    let state.tree.size = len(files)
   endif
 
   noautocmd silent write
 endfunction
 
 function! s:close_tree_rec(state, buf, line) abort
-  if !a:state.tree.open || a:state.tree.size == 0
-    return
-  endif
-
-  let last = a:line + a:state.tree.size
+  let me = a:state.file.abs_path()
   let l = a:line + 1
-  while l <= last
-    let child = s:get_state(l)
-    if child.file.isdir && child.tree.open
-      call s:close_tree_rec(child, a:buf, l)
+  while l <= line('$')
+    let node = s:get_state(l)
+    if node.file.dir != me
+      break
+    endif
+
+    if node.file.isdir && node.tree.open
+      call s:close_tree_rec(node, a:buf, l)
     endif
     let l += 1
   endwhile
-  call deletebufline(a:buf, a:line + 1, last)
+  if a:line + 1 < l
+    call deletebufline(a:buf, a:line + 1, l - 1)
+  endif
   let a:state.tree.open = !a:state.tree.open
 endfunction
