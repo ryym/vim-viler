@@ -55,17 +55,22 @@ function! s:list_files(dir) abort
   return files
 endfunction
 
-let s:_id = 0
-function! s:uniq_id() abort
-  let s:_id += 1
-  return s:_id
+let s:uid = {'_id': 0, '_path_to_id': {}}
+
+function! s:uid.new_id(abs_path) abort
+  if has_key(self._path_to_id, a:abs_path)
+    return self._path_to_id[a:abs_path]
+  endif
+  let self._id += 1
+  let self._path_to_id[a:abs_path] = self._id
+  return self._id
 endfunction
 
 function! s:register_props(files, buf, start_line, depth) abort
   let i = 0
   while i < len(a:files)
     let file = a:files[i]
-    let id = s:uniq_id()
+    let id = s:uid.new_id(file.abs_path())
     call prop_add(
       \   a:start_line + i, 1,
       \   {'type': 'file', 'bufnr': a:buf, 'id': id},
