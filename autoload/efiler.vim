@@ -4,7 +4,6 @@ function! efiler#enable() abort
   augroup efiler
     autocmd!
 
-    autocmd FileType efiler call s:setup_buffer()
     autocmd BufNewFile,BufRead *.efiler setfiletype efiler
   augroup END
 
@@ -15,7 +14,13 @@ function! efiler#open()
   if !filereadable(s:repo_root . '/sample.efiler')
     call writefile([], s:repo_root . '/sample.efiler')
   endif
+
   execute 'silent edit' s:repo_root . '/sample.efiler'
+
+  let cur_buf = bufnr('%')
+  call s:setup_buffer(cur_buf)
+  let files = s:list_files(getcwd())
+  call s:display_files(cur_buf, files)
 endfunction
 
 let s:states = {}
@@ -23,27 +28,24 @@ let s:states = {}
 " XXX: For debug.
 let g:_efs = s:states
 
-function s:setup_buffer() abort
-  if getbufvar('%', 'setup_done', 0)
-    return
-  endif
-  let b:setup_done = 1
-
+function s:setup_buffer(buf) abort
   Map n (buffer silent nowait) f ::call efiler#_toggle_tree()
 
   let files = s:list_files(getcwd())
 
-  let first_line_to_remove = len(files) + 1
-  let cur_buf = bufnr('%')
+  call prop_type_add('file', {'bufnr': a:buf})
+endfunction
 
-  call prop_type_add('file', {'bufnr': cur_buf})
+function! s:display_files(buf, files) abort
+  let first_line_to_remove = len(a:files) + 1
 
-  let filenames = map(copy(files), {_,f -> f.name})
-  call setbufline(cur_buf, 1, filenames)
-  call deletebufline(cur_buf, first_line_to_remove, '$')
+  let filenames = map(copy(a:files), {_,f -> f.name})
+  call setbufline(a:buf, 1, filenames)
+  call deletebufline(a:buf, first_line_to_remove, '$')
 
-  call s:register_props(files, cur_buf, 1, 0)
+  call s:register_props(a:files, a:buf, 1, 0)
 
+  noautocmd silent write
 endfunction
 
 function! s:list_files(dir) abort
