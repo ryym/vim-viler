@@ -19,10 +19,13 @@ function! efiler#open()
 
   let cur_buf = bufnr('%')
   call s:setup_buffer(cur_buf)
-  let files = s:list_files(getcwd())
+
+  let s:cwd = getcwd()
+  let files = s:list_files(s:cwd)
   call s:display_files(cur_buf, files)
 endfunction
 
+let s:cwd = ''
 let s:states = {}
 
 " XXX: For debug.
@@ -30,6 +33,8 @@ let g:_efs = s:states
 
 function s:setup_buffer(buf) abort
   Map n (buffer silent nowait) f ::call efiler#_toggle_tree()
+  Map n (buffer silent nowait) < ::call efiler#_go_up_dir()
+  Map n (buffer silent nowait) > ::call efiler#_go_down_dir()
 
   let files = s:list_files(getcwd())
 
@@ -59,7 +64,7 @@ endfunction
 
 let s:uid = {'_id': 0, '_path_to_id': {}}
 
-function! s:uid.new_id(abs_path) abort
+function! s:uid.get(abs_path) abort
   if has_key(self._path_to_id, a:abs_path)
     return self._path_to_id[a:abs_path]
   endif
@@ -72,7 +77,7 @@ function! s:register_props(files, buf, start_line, depth) abort
   let i = 0
   while i < len(a:files)
     let file = a:files[i]
-    let id = s:uid.new_id(file.abs_path())
+    let id = s:uid.get(file.abs_path())
     call prop_add(
       \   a:start_line + i, 1,
       \   {'type': 'file', 'bufnr': a:buf, 'id': id},
@@ -172,4 +177,37 @@ function! s:close_tree_rec(state, buf, line) abort
     call deletebufline(a:buf, a:line + 1, l - 1)
   endif
   let a:state.tree.open = !a:state.tree.open
+endfunction
+
+function! efiler#_go_up_dir() abort
+  let cur_path = s:cwd . '/'
+  let cwd = fnamemodify(s:cwd, ':h')
+  if cwd == s:cwd
+    return
+  endif
+  call s:change_dir(cwd)
+
+  " Put a cursor at the directory we came from.
+  let l = 1
+  while l <= line('$')
+    let state = s:get_state(l)
+    if state.file.abs_path() == cur_path
+      call cursor(l, 1)
+      break
+    endif
+    let l += 1
+  endwhile
+endfunction
+
+function! efiler#_go_down_dir() abort
+  let state = s:get_state(line('.'))
+  let path = state.file.abs_path()[0:-2] " Strip the last slash.
+  call s:change_dir(path)
+  call cursor(1, 1)
+endfunction
+
+function! s:change_dir(path) abort
+  let s:cwd = a:path
+  let files = s:list_files(s:cwd)
+  call s:display_files(bufnr('%'), files)
 endfunction
