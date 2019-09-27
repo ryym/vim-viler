@@ -21,28 +21,29 @@ function! efiler#open()
   call s:setup_buffer(cur_buf)
 
   let s:cwd = getcwd()
-  let files = s:list_files(s:cwd)
+  let files = s:list_files_on_disk(s:cwd)
   call s:display_files(cur_buf, files)
 endfunction
 
 let s:cwd = ''
 let s:states = {}
+let s:drafts = {}
 
 " XXX: For debug.
 let g:_efs = s:states
+let g:_efd = s:drafts
 
 function s:setup_buffer(buf) abort
   Map n (buffer silent nowait) f ::call efiler#_toggle_tree()
   Map n (buffer silent nowait) < ::call efiler#_go_up_dir()
   Map n (buffer silent nowait) > ::call efiler#_go_down_dir()
 
-  let files = s:list_files(getcwd())
-
   call prop_type_add('file', {'bufnr': a:buf})
 endfunction
 
 function! s:display_files(buf, files) abort
   let first_line_to_remove = len(a:files) + 1
+  let modified_already = &modified
 
   let filenames = map(copy(a:files), {_,f -> f.name})
   call setbufline(a:buf, 1, filenames)
@@ -50,10 +51,24 @@ function! s:display_files(buf, files) abort
 
   call s:register_props(a:files, a:buf, 1, 0)
 
-  noautocmd silent write
+  if !modified_already
+    noautocmd silent write
+  endif
 endfunction
 
-function! s:list_files(dir) abort
+function! s:list_files(file) abort
+  if has_key(s:drafts, a:file.id)
+    let files = []
+    for id in s:drafts[a:file.id].file_ids
+      call add(files, s:states[id].file)
+    endfor
+    return files
+  endif
+
+  return s:list_files_on_disk(a:file.abs_path())
+endfunction
+
+function! s:list_files_on_disk(dir) abort
   let files = []
   for name in readdir(a:dir)
     let file = s:make_file(a:dir, name)
@@ -62,7 +77,7 @@ function! s:list_files(dir) abort
   return files
 endfunction
 
-let s:uid = {'_id': 0, '_path_to_id': {}}
+let s:uid = {'_id': 0, '_path_to_id': {}, '_draft_id': 0}
 
 function! s:uid.get(abs_path) abort
   if has_key(self._path_to_id, a:abs_path)
@@ -71,6 +86,11 @@ function! s:uid.get(abs_path) abort
   let self._id += 1
   let self._path_to_id[a:abs_path] = self._id
   return self._id
+endfunction
+
+function! s:uid.draft_id() abort
+  let self._draft_id -= 1
+  return self._draft_id
 endfunction
 
 function! s:register_props(files, buf, start_line, depth) abort
@@ -103,6 +123,22 @@ function! s:make_file(dir, name) abort
   function! file.abs_path() abort
     return self.dir . self.name
   endfunction
+
+  return file
+endfunction
+
+function! s:make_draft_file(dir, name, opt) abort
+  let dir = a:dir[len(a:dir) - 1] == '/' ? a:dir : a:dir . '/'
+  let id = s:uid.draft_id()
+  let isdir = a:name[len(a:name) - 1] == '/'
+
+  let file = {
+    \   'isdraft': 1,
+    \   'id': id,
+    \   'dir': dir,
+    \   'name': a:name,
+    \   'isdir': isdir,
+    \ }
 
   return file
 endfunction
@@ -140,10 +176,12 @@ function! efiler#_toggle_tree() abort
     return
   endif
 
+  let modified_already = &modified
+
   if state.tree.open
     call s:close_tree_rec(state, cur_buf, cur_line)
   else
-    let files = s:list_files(state.file.abs_path())
+    let files = s:list_files(state.file)
     let indent = s:make_indent(state.depth + 1)
     let filenames = map(copy(files), {_, f-> indent . f.name})
     call append(cur_line, filenames)
@@ -151,27 +189,58 @@ function! efiler#_toggle_tree() abort
     let state.tree.open = !state.tree.open
   endif
 
-  noautocmd silent write
+  if !modified_already
+    noautocmd silent write
+  endif
 endfunction
 
 function! s:close_tree_rec(state, buf, line) abort
-  let me = a:state.file.abs_path()
+  let me = a:state.file
+  let my_path = me.abs_path()
+
+  let modified = 0
+  let file_ids = []
   let l = a:line + 1
   while l <= line('$')
     let node = s:get_state(l)
-    if node.file.dir != me
+
+    " New file (TODO: Maybe it is in the parent directory).
+    if type(node) == v:t_number
+      let modified = 1
+      let depth = a:state.depth + 1
+      let name = s:get_name_on_buf(l, depth)
+      let file = s:make_draft_file(my_path, name, {})
+      let s:states[file.id] = {'file': file, 'depth': depth, 'tree': {'open': 0}}
+      call add(file_ids, file.id)
+      let l += 1
+      continue
+    endif
+
+    if node.file.dir != my_path
       break
     endif
+
+    call add(file_ids, node.file.id)
 
     if node.file.isdir && node.tree.open
       call s:close_tree_rec(node, a:buf, l)
     endif
     let l += 1
   endwhile
+
+  if modified
+    let s:drafts[me.id] = {'file_ids': file_ids}
+  endif
+
   if a:line + 1 < l
     call deletebufline(a:buf, a:line + 1, l - 1)
   endif
   let a:state.tree.open = !a:state.tree.open
+endfunction
+
+function s:get_name_on_buf(lnum, depth) abort
+  let line = getline(a:lnum)
+  return line[a:depth * 2:]
 endfunction
 
 function! efiler#_go_up_dir() abort
@@ -203,6 +272,7 @@ endfunction
 
 function! s:change_dir(path) abort
   let s:cwd = a:path
-  let files = s:list_files(s:cwd)
+ " TODO: Use s:list_files instead
+  let files = s:list_files_on_disk(s:cwd)
   call s:display_files(bufnr('%'), files)
 endfunction
