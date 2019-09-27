@@ -5,6 +5,8 @@ function! efiler#enable() abort
     autocmd!
 
     autocmd BufNewFile,BufRead *.efiler setfiletype efiler
+    " TODO: Set text props on BufRead.
+    " The props disappear when a buffer is reloaded.
   augroup END
 
   command! Efiler call efiler#open()
