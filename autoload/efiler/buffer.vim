@@ -86,7 +86,7 @@ function! s:buffer._register_props(files, start_line, depth) abort
       \   {'type': 'file', 'bufnr': self._nr, 'id': file.id},
       \ )
     call add(states, {
-      \   'file': file,
+      \   'file_id': file.id,
       \   'depth': a:depth,
       \   'tree': {'open': 0},
       \ })

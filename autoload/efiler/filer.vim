@@ -1,5 +1,6 @@
 let s:filer = {
   \   '_dir': '',
+  \   '_files': {},
   \   '_states': {},
   \   '_drafts': {},
   \ }
@@ -20,7 +21,7 @@ endfunction
 
 function! s:filer._merge_states(states) abort
   for state in a:states
-    let self._states[state.file.id] = state
+    let self._states[state.file_id] = state
   endfor
 endfunction
 
@@ -40,7 +41,8 @@ function! s:filer.toggle_tree() abort
   let cur_line = self._buf.cursor_line()
 
   let state = self._state_from_line(cur_line)
-  if !state.file.isdir
+  let file = self._files[state.file_id]
+  if !file.isdir
     return
   endif
 
@@ -49,7 +51,7 @@ function! s:filer.toggle_tree() abort
   if state.tree.open
     call self._close_tree_rec(state, cur_line)
   else
-    let files = self._list_files(state.file)
+    let files = self._list_files(file)
     let appended_states = self._buf.append_files(cur_line, state.depth + 1, files)
     call self._merge_states(appended_states)
     let state.tree.open = !state.tree.open
@@ -61,7 +63,7 @@ function! s:filer.toggle_tree() abort
 endfunction
 
 function! s:filer._close_tree_rec(state, lnum) abort
-  let me = a:state.file
+  let me = self._files[a:state.file_id]
   let my_path = me.abs_path()
 
   let modified = 0
@@ -78,18 +80,19 @@ function! s:filer._close_tree_rec(state, lnum) abort
       let depth = a:state.depth + 1
       let name = self._buf.name_on_line(l, depth)
       let file = self._make_draft_file(my_path, name, {})
-      let self._states[file.id] = {'file': file, 'depth': depth, 'tree': {'open': 0}}
+      let self._states[file.id] = {'file_id': file.id, 'depth': depth, 'tree': {'open': 0}}
       call add(file_ids, file.id)
       continue
     endif
 
-    if node.file.dir != my_path
+    let file = self._files[node.file_id]
+    if file.dir != my_path
       break
     endif
 
-    call add(file_ids, node.file.id)
+    call add(file_ids, file.id)
 
-    if node.file.isdir && node.tree.open
+    if file.isdir && node.tree.open
       call self._close_tree_rec(node, l)
     endif
   endwhile
@@ -118,7 +121,7 @@ function! s:filer.go_up_dir() abort
   while l < line('$')
     let l += 1
     let state = self._state_from_line(l)
-    if state.file.abs_path() == cur_path
+    if self._files[state.file_id].abs_path() == cur_path
       call self._buf.put_cursor(l, 1)
       break
     endif
@@ -127,7 +130,7 @@ endfunction
 
 function! s:filer.go_down_dir() abort
   let state = self._state_from_line(self._buf.cursor_line())
-  let path = state.file.abs_path()[0:-2] " Strip the last slash.
+  let path = self._files[state.file_id].abs_path()[0:-2] " Strip the last slash.
   call self.display(path)
   call self._buf.put_cursor(1, 1)
 endfunction
@@ -136,7 +139,7 @@ function! s:filer._list_files(file) abort
   if has_key(self._drafts, a:file.id)
     let files = []
     for id in self._drafts[a:file.id].file_ids
-      call add(files, self._states[id].file)
+      call add(files, self._files[id])
     endfor
     return files
   endif
@@ -153,10 +156,14 @@ function! s:filer._list_files_on_disk(dir) abort
 endfunction
 
 function! s:filer._make_file(dir, name) abort
-  return self._file_factory.new_file(a:dir, a:name)
+  let file = self._file_factory.new_file(a:dir, a:name)
+  let self._files[file.id] = file
+  return file
 endfunction
 
 function! s:filer._make_draft_file(dir, name, opt) abort
-  return self._file_factory.new_draft_file(a:dir, a:name, a:opt)
+  let file = self._file_factory.new_draft_file(a:dir, a:name, a:opt)
+  let self._files[file.id] = file
+  return file
 endfunction
 
