@@ -17,13 +17,17 @@ function! s:filer.display(dir) abort
   let dir_file = self._make_file(fnamemodify(a:dir, ':h'), fnamemodify(a:dir, ':t'))
 
   let files = self._list_files(dir_file)
-  let states = self._buf.display_files(files)
-  call self._merge_states(states)
+  call self._buf.display_files(files)
+  call self._append_states(files, 0)
 endfunction
 
-function! s:filer._merge_states(states) abort
-  for state in a:states
-    let self._states[state.file_id] = state
+function! s:filer._append_states(files, depth) abort
+  for file in a:files
+    let self._states[file.id] = {
+      \   'file_id': file.id,
+      \   'depth': a:depth,
+      \   'tree_open': 0,
+      \ }
   endfor
 endfunction
 
@@ -50,13 +54,13 @@ function! s:filer.toggle_tree() abort
 
   let modified_already = self._buf.modified()
 
-  if state.tree.open
+  if state.tree_open
     call self._close_tree_rec(state, cur_line)
   else
     let files = self._list_files(file)
-    let appended_states = self._buf.append_files(cur_line, state.depth + 1, files)
-    call self._merge_states(appended_states)
-    let state.tree.open = !state.tree.open
+    call self._buf.append_files(cur_line, state.depth + 1, files)
+    call self._append_states(files, state.depth + 1)
+    let state.tree_open = !state.tree_open
   endif
 
   if !modified_already
@@ -82,7 +86,7 @@ function! s:filer._close_tree_rec(state, lnum) abort
       let depth = a:state.depth + 1
       let name = self._buf.name_on_line(l, depth)
       let file = self._make_draft_file(my_path, name, {})
-      let self._states[file.id] = {'file_id': file.id, 'depth': depth, 'tree': {'open': 0}}
+      call self._append_states([file], depth)
       call add(file_ids, file.id)
       continue
     endif
@@ -94,7 +98,7 @@ function! s:filer._close_tree_rec(state, lnum) abort
 
     call add(file_ids, file.id)
 
-    if file.isdir && node.tree.open
+    if file.isdir && node.tree_open
       call self._close_tree_rec(node, l)
     endif
   endwhile
@@ -106,7 +110,7 @@ function! s:filer._close_tree_rec(state, lnum) abort
   if a:lnum + 1 < l
     call self._buf.delete_lines(a:lnum + 1, l - 1)
   endif
-  let a:state.tree.open = !a:state.tree.open
+  let a:state.tree_open = !a:state.tree_open
 endfunction
 
 function! s:filer.go_up_dir() abort

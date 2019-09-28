@@ -58,23 +58,21 @@ function! s:buffer.display_files(files) abort
   call setbufline(self._nr, 1, filenames)
   call deletebufline(self._nr, first_line_to_remove, '$')
 
-  let states = self._register_props(a:files, 1, 0)
+  call self._register_props(a:files, 1)
 
   if !modified_already
     call self.save()
   endif
-
-  return states
 endfunction
 
 function s:buffer.append_files(lnum, depth, files) abort
   let indent = s:make_indent(a:depth)
   let filenames = map(copy(a:files), {_, f -> indent . f.name})
   call append(a:lnum, filenames)
-  return self._register_props(a:files, a:lnum + 1, a:depth)
+  call self._register_props(a:files, a:lnum + 1)
 endfunction
 
-function! s:buffer._register_props(files, start_line, depth) abort
+function! s:buffer._register_props(files, start_line) abort
   let i = -1
   let states = []
   while i < len(a:files) - 1
@@ -85,11 +83,6 @@ function! s:buffer._register_props(files, start_line, depth) abort
       \   a:start_line + i, 1,
       \   {'type': 'file', 'bufnr': self._nr, 'id': file.id},
       \ )
-    call add(states, {
-      \   'file_id': file.id,
-      \   'depth': a:depth,
-      \   'tree': {'open': 0},
-      \ })
   endwhile
 
   return states
