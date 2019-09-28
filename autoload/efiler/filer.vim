@@ -14,7 +14,9 @@ endfunction
 
 function! s:filer.display(dir) abort
   let self._dir = a:dir
-  let files = self._list_files_on_disk(self._dir)
+  let dir_file = self._make_file(fnamemodify(a:dir, ':h'), fnamemodify(a:dir, ':t'))
+
+  let files = self._list_files(dir_file)
   let states = self._buf.display_files(files)
   call self._merge_states(states)
 endfunction
