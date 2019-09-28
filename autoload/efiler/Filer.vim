@@ -163,7 +163,7 @@ function! s:Filer._list_files_on_disk(dir) abort
     let file = self._make_file(a:dir, name)
     call add(files, file)
   endfor
-  return files
+  return sort(files, function('s:sort_files_by_type_and_name'))
 endfunction
 
 function! s:Filer._make_file(dir, name) abort
@@ -178,3 +178,12 @@ function! s:Filer._make_draft_file(dir, name, opt) abort
   return file
 endfunction
 
+function! s:sort_files_by_type_and_name(a, b) abort
+  if a:a.isdir != a:b.isdir
+    return a:b.isdir - a:a.isdir
+  endif
+  if a:a.name == a:b.name
+    return 0
+  endif
+  return a:a.name < a:b.name ? -1 : 1
+endfunction
