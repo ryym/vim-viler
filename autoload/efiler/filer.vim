@@ -132,7 +132,12 @@ endfunction
 
 function! s:filer.go_down_dir() abort
   let state = self._state_from_line(self._buf.cursor_line())
-  let path = self._files[state.file_id].abs_path()[0:-2] " Strip the last slash.
+  let file = self._files[state.file_id]
+  if !file.isdir
+    return
+  endif
+
+  let path = file.abs_path()[0:-2] " Strip the last slash.
   call self.display(path)
   call self._buf.put_cursor(1, 1)
 endfunction
