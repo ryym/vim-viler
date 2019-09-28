@@ -1,18 +1,18 @@
-let s:filer = {
+let s:Filer = {
   \   '_dir': '',
   \   '_files': {},
   \   '_states': {},
   \   '_drafts': {},
   \ }
 
-function! efiler#filer#new(buf, file_factory) abort
-  let filer = deepcopy(s:filer)
+function! efiler#Filer#new(buf, file_factory) abort
+  let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
   let filer._file_factory = a:file_factory
   return filer
 endfunction
 
-function! s:filer.display(dir) abort
+function! s:Filer.display(dir) abort
   let self._dir = a:dir
   let dir_file = self._make_file(fnamemodify(a:dir, ':h'), fnamemodify(a:dir, ':t'))
 
@@ -21,7 +21,7 @@ function! s:filer.display(dir) abort
   call self._append_states(files, 0)
 endfunction
 
-function! s:filer._append_states(files, depth) abort
+function! s:Filer._append_states(files, depth) abort
   for file in a:files
     let self._states[file.id] = {
       \   'file_id': file.id,
@@ -31,7 +31,7 @@ function! s:filer._append_states(files, depth) abort
   endfor
 endfunction
 
-function! s:filer._state_from_line(lnum) abort
+function! s:Filer._state_from_line(lnum) abort
   let prop = self._buf.get_prop_at(a:lnum)
   if type(prop) == v:t_number
     return prop
@@ -43,7 +43,7 @@ function! s:filer._state_from_line(lnum) abort
   return self._states[prop.id]
 endfunction
 
-function! s:filer.toggle_tree() abort
+function! s:Filer.toggle_tree() abort
   let cur_line = self._buf.cursor_line()
 
   let state = self._state_from_line(cur_line)
@@ -68,7 +68,7 @@ function! s:filer.toggle_tree() abort
   endif
 endfunction
 
-function! s:filer._close_tree_rec(state, lnum) abort
+function! s:Filer._close_tree_rec(state, lnum) abort
   let me = self._files[a:state.file_id]
   let my_path = me.abs_path()
 
@@ -113,7 +113,7 @@ function! s:filer._close_tree_rec(state, lnum) abort
   let a:state.tree_open = !a:state.tree_open
 endfunction
 
-function! s:filer.go_up_dir() abort
+function! s:Filer.go_up_dir() abort
   let parent_dir = fnamemodify(self._dir, ':h')
   if parent_dir == self._dir
     return
@@ -134,7 +134,7 @@ function! s:filer.go_up_dir() abort
   endwhile
 endfunction
 
-function! s:filer.go_down_dir() abort
+function! s:Filer.go_down_dir() abort
   let state = self._state_from_line(self._buf.cursor_line())
   let file = self._files[state.file_id]
   if !file.isdir
@@ -146,7 +146,7 @@ function! s:filer.go_down_dir() abort
   call self._buf.put_cursor(1, 1)
 endfunction
 
-function! s:filer._list_files(file) abort
+function! s:Filer._list_files(file) abort
   if has_key(self._drafts, a:file.id)
     let files = []
     for id in self._drafts[a:file.id].file_ids
@@ -157,7 +157,7 @@ function! s:filer._list_files(file) abort
   return self._list_files_on_disk(a:file.abs_path())
 endfunction
 
-function! s:filer._list_files_on_disk(dir) abort
+function! s:Filer._list_files_on_disk(dir) abort
   let files = []
   for name in readdir(a:dir)
     let file = self._make_file(a:dir, name)
@@ -166,13 +166,13 @@ function! s:filer._list_files_on_disk(dir) abort
   return files
 endfunction
 
-function! s:filer._make_file(dir, name) abort
+function! s:Filer._make_file(dir, name) abort
   let file = self._file_factory.new_file(a:dir, a:name)
   let self._files[file.id] = file
   return file
 endfunction
 
-function! s:filer._make_draft_file(dir, name, opt) abort
+function! s:Filer._make_draft_file(dir, name, opt) abort
   let file = self._file_factory.new_draft_file(a:dir, a:name, a:opt)
   let self._files[file.id] = file
   return file

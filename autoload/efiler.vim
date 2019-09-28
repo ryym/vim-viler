@@ -18,10 +18,10 @@ function! efiler#open() abort
     call writefile([], sample_file)
   endif
 
-  let buf = efiler#buffer#new(sample_file)
-  let uid = efiler#uid#new()
-  let file_factory = efiler#file#new_factory(uid)
-  let filer = efiler#filer#new(buf, file_factory)
+  let buf = efiler#Buffer#new(sample_file)
+  let uid = efiler#Uid#new()
+  let file_factory = efiler#File#new_factory(uid)
+  let filer = efiler#Filer#new(buf, file_factory)
 
   call buf.open()
   call s:define_key_bindings(buf.nr())
