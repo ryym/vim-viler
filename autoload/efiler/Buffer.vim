@@ -1,9 +1,15 @@
-let s:Buffer = {'_nr': 0}
+let s:Buffer = {'_id': 0, '_nr': 0}
 
-function! efiler#Buffer#new(bufnr) abort
+function! efiler#Buffer#new(id) abort
   let buffer = deepcopy(s:Buffer)
-  let buffer._nr = a:bufnr
+  let buffer._id = a:id
   return buffer
+endfunction
+
+function! s:Buffer.open(path) abort
+  execute 'silent edit' a:path
+  let self._nr = bufnr('%')
+  return self._nr
 endfunction
 
 function! s:Buffer.nr() abort

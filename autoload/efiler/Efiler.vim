@@ -1,6 +1,9 @@
 let s:repo_root = expand('<sfile>:p:h:h:h')
 
-let s:Efiler = {'_filers': {}}
+let s:Efiler = {
+  \   '_filers': {},
+  \   '_buf_id': 0,
+  \ }
 
 function! efiler#Efiler#create() abort
   let id_gen = efiler#IdGen#new()
@@ -14,17 +17,11 @@ function! efiler#Efiler#new(id_gen) abort
 endfunction
 
 function! s:Efiler.open_new(dir) abort
-  " TODO: Use temporary file.
-  let sample_file = s:repo_root . '/sample.efiler'
-  if !filereadable(sample_file)
-    call writefile([], sample_file)
-  endif
-  execute 'silent edit' sample_file
-  call deletebufline('%', 1, '$')
-  noautocmd silent write
+  let temp_file = tempname() . '.efiler'
+  let self._buf_id += 1
+  let buffer = efiler#Buffer#new(self._buf_id)
+  let bufnr = buffer.open(temp_file)
 
-  let bufnr = bufnr('%')
-  let buffer = efiler#Buffer#new(bufnr)
   let filer = efiler#Filer#new(buffer, self._id_gen)
   let self._filers[bufnr] = filer
 
