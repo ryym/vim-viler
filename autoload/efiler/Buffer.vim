@@ -1,8 +1,7 @@
-let s:Buffer = {'_id': 0, '_nr': 0}
+let s:Buffer = {'_nr': 0}
 
-function! efiler#Buffer#new(id) abort
+function! efiler#Buffer#new() abort
   let buffer = deepcopy(s:Buffer)
-  let buffer._id = a:id
   return buffer
 endfunction
 

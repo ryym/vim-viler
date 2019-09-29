@@ -1,8 +1,8 @@
 let s:repo_root = expand('<sfile>:p:h:h:h')
 
 let s:Efiler = {
+  \   '_filer_id': 0,
   \   '_filers': {},
-  \   '_buf_id': 0,
   \ }
 
 function! efiler#Efiler#create() abort
@@ -18,11 +18,11 @@ endfunction
 
 function! s:Efiler.open_new(dir) abort
   let temp_file = tempname() . '.efiler'
-  let self._buf_id += 1
-  let buffer = efiler#Buffer#new(self._buf_id)
+  let buffer = efiler#Buffer#new()
   let bufnr = buffer.open(temp_file)
 
-  let filer = efiler#Filer#new(buffer, self._id_gen)
+  let self._filer_id += 1
+  let filer = efiler#Filer#new(self._filer_id, buffer, self._id_gen)
   let self._filers[bufnr] = filer
 
   call filer.display(a:dir)

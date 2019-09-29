@@ -1,9 +1,10 @@
-let s:Filer = {}
+let s:Filer = {'_id': 0}
 
-function! efiler#Filer#new(buf, id_gen) abort
+function! efiler#Filer#new(id, buf, id_gen) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
-  let filer._id = a:id_gen
+  let filer._id = a:id
+  let filer._node_id = a:id_gen
   return filer
 endfunction
 
@@ -13,7 +14,7 @@ function! s:Filer.display(dir) abort
 endfunction
 
 function! s:Filer._make_node(dir, name) abort
-  let id = self._id.make()
+  let id = self._node_id.make()
   return efiler#Node#new(id, a:dir . '/' . a:name)
 endfunction
 
