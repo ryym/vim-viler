@@ -11,4 +11,7 @@ endfunction
 
 function! efiler#open() abort
   call s:efiler.open_new(getcwd())
+
+  setlocal conceallevel=1
+  setlocal concealcursor=nvic
 endfunction
