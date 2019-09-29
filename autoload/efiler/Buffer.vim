@@ -10,6 +10,7 @@ function! s:Buffer.open() abort
   execute 'silent edit' self._path
   let self._nr = bufnr('%')
   call prop_type_add('file', {'bufnr': self._nr})
+  call prop_type_add('hoge', {'bufnr': self._nr})
 endfunction
 
 function! s:Buffer.nr() abort
@@ -33,6 +34,10 @@ function! s:Buffer.get_prop_at(lnum) abort
   return len(props) == 0 ? 0 : props[0]
 endfunction
 
+function! s:Buffer.selection_range() abort
+  return {'first': line("'<"), 'last': line("'>")}
+endfunction
+
 function s:Buffer.name_on_line(lnum, depth) abort
   let line = getbufline(self._nr, a:lnum)[0]
   return line[a:depth * 2:]
@@ -54,7 +59,7 @@ function! s:Buffer.display_files(files) abort
   let first_line_to_remove = len(a:files) + 1
   let modified_already = self.modified()
 
-  let filenames = map(copy(a:files), {_,f -> f.name})
+  let filenames = map(copy(a:files), {_,f -> '123 ' . f.name})
   call setbufline(self._nr, 1, filenames)
   call deletebufline(self._nr, first_line_to_remove, '$')
 

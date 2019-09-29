@@ -22,6 +22,8 @@ function! s:Factory.new_file(dir, name) abort
   let file.id = self._uid.get(abs_path)
   let file.name = isdir ? a:name . '/' : a:name
   let file.isdir = isdir
+  let file.isdraft = 1
+  let file.original_file_id = 0
   return file
 endfunction
 
@@ -30,10 +32,11 @@ function! s:Factory.new_draft_file(dir, name, opt) abort
   let isdir = a:name[len(a:name) - 1] == '/'
 
   let file = deepcopy(s:File)
-  let file.isdraft = 1
   let file.dir = dir
   let file.id = self._uid.draft_id()
-  let file.name = isdir ? a:name . '/' : a:name
+  let file.name = isdir && a:name[len(a:name)-1] != '/' ? a:name . '/' : a:name
   let file.isdir = isdir
+  let file.isdraft = 1
+  let file.original_file_id = get(a:opt, 'original_file_id', 0)
   return file
 endfunction

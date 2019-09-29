@@ -4,6 +4,8 @@ function! efiler#enable() abort
   augroup efiler
     autocmd!
 
+    " autocmd TextChanged * echom 'change' string([line("'["), line("']")])
+    " autocmd TextChangedI * echom 'change' string([line("'["), line("']")])
     autocmd BufNewFile,BufRead *.efiler setfiletype efiler
     " TODO: Set text props on BufRead.
     " The props disappear when a buffer is reloaded.
@@ -30,14 +32,31 @@ function! efiler#open() abort
   call setbufvar(buf.nr(), '_efiler_filer', filer)
 
   " XXX: For debug.
-  let g:_efs = filer._states
-  let g:_efd = filer._drafts
+  let g:_eff = filer
+  " let g:_efs = filer._states
+  " let g:_efd = filer._drafts
 endfunction
 
 function s:define_key_bindings(bufnr) abort
   Map n (buffer silent nowait) f ::call efiler#toggle_tree()
   Map n (buffer silent nowait) < ::call efiler#go_up_dir()
   Map n (buffer silent nowait) > ::call efiler#go_down_dir()
+  Map v (buffer silent nowait) <Space>d ::call efiler#delete_for_move()
+  Map n (buffer silent nowait) <Space>p ::call efiler#paste()
+
+  syn match EfilerHoge '\v^\d+' conceal
+
+  setlocal conceallevel=1
+  setlocal concealcursor=nvic
+
+  highlight def link EfilerHoge NonText
+endfunction
+
+Map n <Space>ll ::call Hoge()
+
+function! Hoge() abort
+  echom 'hoho'
+  call append(line('.'), ['hey'])
 endfunction
 
 function! s:get_efiler_inst() abort
@@ -61,4 +80,14 @@ endfunction
 function! efiler#go_down_dir() abort
   let filer = s:get_efiler_inst()
   call filer.go_down_dir()
+endfunction
+
+function! efiler#delete_for_move() abort
+  let filer = s:get_efiler_inst()
+  call filer.delete_for_move()
+endfunction
+
+function! efiler#paste() abort
+  let filer = s:get_efiler_inst()
+  call filer.paste_selected()
 endfunction
