@@ -16,3 +16,7 @@ function! efiler#Node#new(id, abs_path) abort
   endif
   return node
 endfunction
+
+function! s:Node.abs_path() abort
+  return self.dir . '/' . self.name
+endfunction

@@ -24,6 +24,11 @@ function! s:Buffer.display_nodes(nodes) abort
   noautocmd silent write
 endfunction
 
+function! s:Buffer.node_row(lnum) abort
+  let linestr = getbufline(self._nr, line(a:lnum))[0]
+  return s:decode_node_line(linestr)
+endfunction
+
 function! s:node_to_line(node, depth) abort
   let meta = 'n' . a:node.id . ' '
   let indent = s:make_indent(a:depth * 2)
@@ -38,4 +43,14 @@ function! s:make_indent(level) abort
     let i += 1
   endwhile
   return s
+endfunction
+
+function! s:decode_node_line(line) abort
+  let metaend = matchend(a:line, '\vn\d+', 0, 1)
+  let meta = a:line[0:metaend-1]
+  let name = trim(a:line[metaend:])
+  return {
+    \   'node_id': str2nr(meta[1:], 10),
+    \   'name': name,
+    \ }
 endfunction

@@ -27,3 +27,7 @@ function! s:Efiler.open_new(dir) abort
 
   call filer.display(a:dir)
 endfunction
+
+function! s:Efiler.filer_for(bufnr) abort
+  return get(self._filers, a:bufnr, 0)
+endfunction

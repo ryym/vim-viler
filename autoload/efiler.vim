@@ -14,4 +14,19 @@ function! efiler#open() abort
 
   setlocal conceallevel=1
   setlocal concealcursor=nvic
+
+  " XXX: Temporary.
+  Map n (buffer silent nowait) L ::call efiler#go_down_cursor_dir()
+endfunction
+
+function! s:current_filer() abort
+  let filer = s:efiler.filer_for(bufnr('%'))
+  if type(filer) == v:t_number
+    throw '[efiler] This buffer is not a file explorer'
+  endif
+  return filer
+endfunction
+
+function! efiler#go_down_cursor_dir() abort
+  call s:current_filer().go_down_cursor_dir()
 endfunction
