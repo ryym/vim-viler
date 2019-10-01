@@ -1,19 +1,18 @@
-let s:Filer = {'_id': 0, '_nodes': {}}
+let s:Filer = {}
 
 function! efiler#Filer#new(id, buf, id_gen) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
   let filer._id = a:id
   let filer._node_id = a:id_gen
+  let filer._nodes = {}
   return filer
 endfunction
 
 function! s:Filer.display(dir) abort
-  let self._nodes = {}
+  call self._clear_nodes()
 
   let dir_node = self._make_node(a:dir)
-  let self._nodes[dir_node.id] = dir_node
-
   let nodes = self._list_children(a:dir)
   call self._buf.display_nodes(dir_node, nodes)
   call self._buf.reset_cursor()
@@ -21,16 +20,28 @@ function! s:Filer.display(dir) abort
   return {'dir': dir_node, 'nodes': nodes}
 endfunction
 
+function! s:Filer._clear_nodes() abort
+  let self._nodes = {}
+endfunction
+
 function! s:Filer._make_node(abs_path) abort
   let id = self._node_id.make()
-  return efiler#Node#new(id, a:abs_path)
+  return self._make_node_with_id(a:abs_path, id)
+endfunction
+
+function! s:Filer._make_node_with_id(abs_path, id) abort
+  if has_key(self._nodes, a:id)
+    return self._nodes[a:id]
+  endif
+  let node = efiler#Node#new(a:id, a:abs_path)
+  let self._nodes[node.id] = node
+  return node
 endfunction
 
 function! s:Filer._list_children(dir) abort
   let nodes = []
   for name in readdir(a:dir)
     let node = self._make_node(a:dir . '/' . name)
-    let self._nodes[node.id] = node
     call add(nodes, node)
   endfor
   return nodes
@@ -44,13 +55,13 @@ function! s:Filer._node(id) abort
 endfunction
 
 function! s:Filer.go_down_cursor_dir() abort
-  let row = self._buf.node_row(self._buf.cursor_line())
+  let row = self._buf.node_row(self._buf.lnum_cursor())
   let node = self._node(row.node_id)
   call self.display(node.abs_path())
 endfunction
 
 function! s:Filer.go_up_dir() abort
-  let dir_id = self._buf.current_dir_node_id()
+  let dir_id = self._buf.current_dir().node_id
   let dir_node = self._node(dir_id)
   let shown_nodes = self.display(dir_node.dir)
 
@@ -68,4 +79,40 @@ function! s:Filer.go_up_dir() abort
       call self._buf.put_cursor(lnum, 1)
     endif
   endif
+endfunction
+
+function! s:Filer.undo() abort
+  if self._buf.modified()
+    call self._buf.undo()
+    return
+  endif
+
+  call self._clear_nodes()
+  call self._buf.undo()
+  call self._restore_nodes_on_buf()
+endfunction
+
+function! s:Filer.redo() abort
+  if self._buf.modified()
+    call self._buf.redo()
+    return
+  endif
+
+  call self._clear_nodes()
+  call self._buf.redo()
+  call self._restore_nodes_on_buf()
+endfunction
+
+function! s:Filer._restore_nodes_on_buf() abort
+  let cur_dir = self._buf.current_dir()
+  call self._make_node_with_id(cur_dir.path, cur_dir.node_id)
+
+  let dir_path = cur_dir.path . '/'
+  let l = self._buf.lnum_first() - 1
+  let last_l = self._buf.lnum_last()
+  while l < last_l
+    let l += 1
+    let row = self._buf.node_row(l)
+    call self._make_node_with_id(dir_path . row.name, row.node_id)
+  endwhile
 endfunction

@@ -12,12 +12,14 @@ endfunction
 function! efiler#open() abort
   call s:efiler.open_new(getcwd())
 
-  setlocal conceallevel=1
+  setlocal conceallevel=0 " XXX: For debag.
   setlocal concealcursor=nvic
 
   " XXX: Temporary.
-  Map n (buffer silent nowait) L ::call efiler#go_down_cursor_dir()
-  Map n (buffer silent nowait) H ::call efiler#go_up_dir()
+  Map n (buffer silent nowait) <C-l> ::call efiler#go_down_cursor_dir()
+  Map n (buffer silent nowait) <C-h> ::call efiler#go_up_dir()
+  Map n (buffer silent nowait) u ::call efiler#undo()
+  Map n (buffer silent nowait) <C-r> ::call efiler#redo()
 endfunction
 
 function! efiler#_debug() abort
@@ -38,4 +40,12 @@ endfunction
 
 function! efiler#go_up_dir() abort
   call s:current_filer().go_up_dir()
+endfunction
+
+function! efiler#undo() abort
+  call s:current_filer().undo()
+endfunction
+
+function! efiler#redo() abort
+  call s:current_filer().redo()
 endfunction
