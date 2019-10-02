@@ -125,9 +125,10 @@ function! s:Filer.undo() abort
     return
   endif
 
+  let cur_dir = self._buf.current_dir()
   call self._clear_nodes()
   call self._buf.undo()
-  call self._restore_nodes_on_buf()
+  call self._restore_nodes_on_buf(cur_dir)
 endfunction
 
 function! s:Filer.redo() abort
@@ -136,15 +137,17 @@ function! s:Filer.redo() abort
     return
   endif
 
+  let cur_dir = self._buf.current_dir()
   call self._clear_nodes()
   call self._buf.redo()
-  call self._restore_nodes_on_buf()
+  call self._restore_nodes_on_buf(cur_dir)
 endfunction
 
-function! s:Filer._restore_nodes_on_buf() abort
+function! s:Filer._restore_nodes_on_buf(prev_dir) abort
   let cur_dir = self._buf.current_dir()
   call self._make_node_with_id(cur_dir.path, cur_dir.node_id)
 
+  let prev_dir_lnum = 0
   let prev_depth = 0
   let prev_name = ''
   let dir_path = cur_dir.path
@@ -160,8 +163,16 @@ function! s:Filer._restore_nodes_on_buf() abort
       let dir_path = fnamemodify(dir_path, ':h')
     endif
 
-    call self._make_node_with_id(dir_path . '/' . row.name, row.node_id)
+    let file_path = dir_path . '/' . row.name
+    call self._make_node_with_id(file_path, row.node_id)
     let prev_depth = row.depth
     let prev_name = row.name
+
+    if file_path == a:prev_dir.path
+      let prev_dir_lnum = l
+    endif
   endwhile
+
+  let cursor_lnum = 0 < prev_dir_lnum ? prev_dir_lnum : self._buf.lnum_first()
+  call self._buf.put_cursor(cursor_lnum, 1)
 endfunction
