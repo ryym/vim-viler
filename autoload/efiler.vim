@@ -18,6 +18,7 @@ function! efiler#open() abort
   " XXX: Temporary.
   Map n (buffer silent nowait) <C-l> ::call efiler#go_down_cursor_dir()
   Map n (buffer silent nowait) <C-h> ::call efiler#go_up_dir()
+  Map n (buffer silent nowait) f ::call efiler#toggle_tree()
   Map n (buffer silent nowait) u ::call efiler#undo()
   Map n (buffer silent nowait) <C-r> ::call efiler#redo()
 endfunction
@@ -40,6 +41,10 @@ endfunction
 
 function! efiler#go_up_dir() abort
   call s:current_filer().go_up_dir()
+endfunction
+
+function! efiler#toggle_tree() abort
+  call s:current_filer().toggle_tree()
 endfunction
 
 function! efiler#undo() abort

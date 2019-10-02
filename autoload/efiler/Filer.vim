@@ -83,6 +83,42 @@ function! s:Filer.go_up_dir() abort
   endif
 endfunction
 
+function! s:Filer.toggle_tree() abort
+  " TODO: Prevent toggling of edited directory.
+  let row = self._buf.node_row(self._buf.lnum_cursor())
+  if !row.is_dir
+    return
+  endif
+
+  let node = self._node(row.node_id)
+  if row.state.tree_open
+    call self._buf.update_node_row(node, row, {'tree_open': 0})
+    call self._close_tree(node, row)
+  else
+    call self._buf.update_node_row(node, row, {'tree_open': 1})
+    let nodes = self._list_children(node.abs_path())
+    call self._buf.append_nodes(row.lnum, nodes, row.depth + 1)
+  endif
+
+  call self._buf.save()
+endfunction
+
+function! s:Filer._close_tree(dir_node, dir_row) abort
+  let last_lnum = self._buf.lnum_last()
+  let l = a:dir_row.lnum
+  while l < last_lnum
+    let l += 1
+    let row = self._buf.node_row(l)
+    if row.depth <= a:dir_row.depth
+      break
+    endif
+    call remove(self._nodes, row.node_id)
+  endwhile
+  if a:dir_row.lnum + 1 < l
+    call self._buf.delete_lines(a:dir_row.lnum + 1, l - 1)
+  endif
+endfunction
+
 function! s:Filer.undo() abort
   if self._buf.modified()
     call self._buf.undo()

@@ -35,6 +35,10 @@ function! s:Buffer.reset_cursor() abort
   call cursor(self.lnum_first(), 1)
 endfunction
 
+function! s:Buffer.save() abort
+  noautocmd silent write
+endfunction
+
 function! s:Buffer.node_lnum(node_id) abort
   let l = 1 " Skip the first line which contains buffer metadata.
   while l < line('$')
@@ -50,13 +54,22 @@ endfunction
 function! s:Buffer.display_nodes(dir_node, nodes) abort
   call setbufline(self._nr, 1, s:dir_metadata(a:dir_node))
 
-  let names = map(copy(a:nodes), {_, n -> s:node_to_line(n, 0)})
-  call setbufline(self._nr, 2, names)
+  let lines = map(copy(a:nodes), {_, n -> s:node_to_line(n, 0, {})})
+  call setbufline(self._nr, 2, lines)
 
   let first_line_to_remove = len(a:nodes) + 2
   call deletebufline(self._nr, first_line_to_remove, '$')
 
-  noautocmd silent write
+  call self.save()
+endfunction
+
+function! s:Buffer.append_nodes(lnum, nodes, depth) abort
+  let lines = map(copy(a:nodes), {_, n -> s:node_to_line(n, a:depth, {})})
+  call append(a:lnum, lines)
+endfunction
+
+function! s:Buffer.delete_lines(first, last) abort
+  call deletebufline(self._nr, a:first, a:last)
 endfunction
 
 function! s:Buffer.current_dir() abort
@@ -66,7 +79,18 @@ endfunction
 
 function! s:Buffer.node_row(lnum) abort
   let linestr = getbufline(self._nr, a:lnum)[0]
-  return s:decode_node_line(linestr)
+  let row = s:decode_node_line(linestr)
+  let row.lnum = a:lnum
+  return row
+endfunction
+
+function! s:Buffer.update_node_row(node, row, state_changes) abort
+  let state = copy(a:row.state)
+  for key in keys(a:state_changes)
+    let state[key] = a:state_changes[key]
+  endfor
+  let line = s:node_to_line(a:node, a:row.depth, state)
+  call setbufline(self._nr, a:row.lnum, line)
 endfunction
 
 function! s:Buffer.modified() abort
@@ -81,7 +105,7 @@ function! s:Buffer.undo() abort
   endif
 
   silent undo
-  noautocmd silent write
+  call self.save()
 endfunction
 
 function! s:Buffer.redo() abort
@@ -92,13 +116,17 @@ function! s:Buffer.redo() abort
   endif
 
   silent redo
-  noautocmd silent write
+  call self.save()
 endfunction
 
-function! s:node_to_line(node, depth) abort
-  let meta = 'n' . a:node.id . ' '
-  let indent = s:make_indent(a:depth * 2)
+function! s:node_to_line(node, depth, state) abort
+  let meta = s:node_meta_to_line(a:node.id, a:state)
+  let indent = s:make_indent(a:depth)
   return meta . indent . a:node.name . (a:node.is_dir ? '/' : '')
+endfunction
+
+function! s:node_meta_to_line(node_id, meta) abort
+  return 'n' . a:node_id . 's' . get(a:meta, 'tree_open', 0) . ' '
 endfunction
 
 function! s:make_indent(level) abort
@@ -112,15 +140,25 @@ function! s:make_indent(level) abort
 endfunction
 
 function! s:decode_node_line(whole_line) abort
-  let [meta, line] = s:split_head_tail(a:whole_line, '\vn\d+')
+  let [metaline, line] = s:split_head_tail(a:whole_line, '\vn\d+s[01]')
+  let [node_id, state] = s:decode_node_line_meta(metaline)
   let [indent, name] = s:split_head_tail(line, '\v\s+')
   let is_dir = name[len(name) - 1] == '/'
   return {
-    \   'node_id': str2nr(meta[1:], 10),
+    \   'node_id': node_id,
     \   'name': is_dir ? name[0:-2] : name,
     \   'is_dir': is_dir,
-    \   'depth': indent / 2,
+    \   'depth': len(indent) / 2,
+    \   'state': state,
     \ }
+endfunction
+
+function! s:decode_node_line_meta(meta) abort
+  let id_end = matchend(a:meta, '\vn\d+', 0, 1)
+  let node_id = str2nr(a:meta[1:id_end-1], 10)
+  let state = a:meta[id_end:]
+  let tree_open = str2nr(state[1], 10)
+  return [node_id, {'tree_open': tree_open}]
 endfunction
 
 function! s:dir_metadata(dir_node) abort
