@@ -44,7 +44,17 @@ function! s:Filer._list_children(dir) abort
     let node = self._make_node(a:dir . '/' . name)
     call add(nodes, node)
   endfor
-  return nodes
+  return sort(nodes, function('s:sort_nodes_by_type_and_name'))
+endfunction
+
+function! s:sort_nodes_by_type_and_name(a, b) abort
+  if a:a.is_dir != a:b.is_dir
+    return a:b.is_dir - a:a.is_dir
+  endif
+  if a:a.name == a:b.name
+    return 0
+  endif
+  return a:a.name < a:b.name ? -1 : 1
 endfunction
 
 function! s:Filer._node(id) abort
