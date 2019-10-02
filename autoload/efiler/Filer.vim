@@ -145,12 +145,23 @@ function! s:Filer._restore_nodes_on_buf() abort
   let cur_dir = self._buf.current_dir()
   call self._make_node_with_id(cur_dir.path, cur_dir.node_id)
 
-  let dir_path = cur_dir.path . '/'
+  let prev_depth = 0
+  let prev_name = ''
+  let dir_path = cur_dir.path
   let l = self._buf.lnum_first() - 1
   let last_l = self._buf.lnum_last()
   while l < last_l
     let l += 1
     let row = self._buf.node_row(l)
-    call self._make_node_with_id(dir_path . row.name, row.node_id)
+
+    if prev_depth < row.depth
+      let dir_path .= '/' . prev_name
+    elseif prev_depth > row.depth
+      let dir_path = fnamemodify(dir_path, ':h')
+    endif
+
+    call self._make_node_with_id(dir_path . '/' . row.name, row.node_id)
+    let prev_depth = row.depth
+    let prev_name = row.name
   endwhile
 endfunction
