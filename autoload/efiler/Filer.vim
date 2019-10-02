@@ -56,8 +56,10 @@ endfunction
 
 function! s:Filer.go_down_cursor_dir() abort
   let row = self._buf.node_row(self._buf.lnum_cursor())
-  let node = self._node(row.node_id)
-  call self.display(node.abs_path())
+  if row.is_dir
+    let node = self._node(row.node_id)
+    call self.display(node.abs_path())
+  endif
 endfunction
 
 function! s:Filer.go_up_dir() abort
