@@ -141,16 +141,24 @@ endfunction
 
 function! s:decode_node_line(whole_line) abort
   let [metaline, line] = s:split_head_tail(a:whole_line, '\vn\d+s[01]')
-  let [node_id, state] = s:decode_node_line_meta(metaline)
   let [indent, name] = s:split_head_tail(line, '\v\s+')
-  let is_dir = name[len(name) - 1] == '/'
-  return {
-    \   'node_id': node_id,
+  let is_dir = len(name) > 0 && name[len(name) - 1] == '/'
+
+  let row = {
     \   'name': is_dir ? name[0:-2] : name,
     \   'is_dir': is_dir,
     \   'depth': len(indent) / 2,
-    \   'state': state,
+    \   'is_new': 1,
     \ }
+
+  if metaline != ''
+    let [node_id, state] = s:decode_node_line_meta(metaline)
+    let row.is_new = 0
+    let row.node_id = node_id
+    let row.state = state
+  endif
+
+  return row
 endfunction
 
 function! s:decode_node_line_meta(meta) abort
@@ -176,6 +184,10 @@ endfunction
 
 function! s:split_head_tail(str, head_pat) abort
   let head_end = matchend(a:str, a:head_pat, 0, 1)
+  if head_end == -1
+    return ['', a:str]
+  endif
+
   let head = a:str[0:head_end-1]
   let tail = a:str[head_end:]
   return [head, tail]

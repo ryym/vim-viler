@@ -2,6 +2,7 @@ function! efiler#enable() abort
   augroup efiler
     autocmd!
     autocmd BufNewFile,BufRead *.efiler setfiletype efiler
+    autocmd BufWritePre *.efiler call efiler#apply_changes()
   augroup END
 
   let s:efiler = efiler#Efiler#create()
@@ -53,4 +54,8 @@ endfunction
 
 function! efiler#redo() abort
   call s:current_filer().redo()
+endfunction
+
+function! efiler#apply_changes() abort
+  call s:efiler.apply_changes()
 endfunction

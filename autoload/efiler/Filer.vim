@@ -1,10 +1,11 @@
 let s:Filer = {}
 
-function! efiler#Filer#new(id, buf, id_gen) abort
+function! efiler#Filer#new(id, buf, id_gen, diff_checker) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
   let filer._id = a:id
   let filer._node_id = a:id_gen
+  let filer._diff_checker = a:diff_checker
   let filer._nodes = {}
   return filer
 endfunction
@@ -185,4 +186,8 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
 
   let cursor_lnum = 0 < prev_dir_lnum ? prev_dir_lnum : self._buf.lnum_first()
   call self._buf.put_cursor(cursor_lnum, 1)
+endfunction
+
+function! s:Filer.gather_changes(changeset) abort
+  call self._diff_checker.gather_changes(self._buf, self._nodes, a:changeset)
 endfunction
