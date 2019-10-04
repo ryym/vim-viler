@@ -11,7 +11,13 @@ function! efiler#enable() abort
 endfunction
 
 function! efiler#open() abort
-  call s:efiler.open_new(getcwd())
+  let cur_bufnr = bufnr('%')
+  if s:efiler.has_filer_for(cur_bufnr)
+    call s:efiler.open(cur_bufnr, getcwd())
+    return
+  endif
+
+  call s:efiler.create_filer(getcwd())
 
   setlocal conceallevel=0 " XXX: For debag.
   setlocal concealcursor=nvic
@@ -58,4 +64,5 @@ endfunction
 
 function! efiler#apply_changes() abort
   call s:efiler.apply_changes()
+  call efiler#open()
 endfunction

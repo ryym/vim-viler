@@ -18,7 +18,7 @@ function! efiler#Efiler#new(id_gen, diff_checker) abort
   return efiler
 endfunction
 
-function! s:Efiler.open_new(dir) abort
+function! s:Efiler.create_filer(dir) abort
   let temp_file = tempname() . '.efiler'
   let buffer = efiler#Buffer#new()
   let bufnr = buffer.open(temp_file)
@@ -33,6 +33,19 @@ function! s:Efiler.open_new(dir) abort
   let self._filers[bufnr] = filer
 
   call filer.display(a:dir)
+endfunction
+
+function! s:Efiler.open(bufnr, dir) abort
+  if !has_key(self._filers, a:bufnr)
+    throw '[efiler] Unknown buffer' a:bufnr
+  endif
+
+  let filer = self._filers[a:bufnr]
+  call filer.display(a:dir)
+endfunction
+
+function! s:Efiler.has_filer_for(bufnr) abort
+  return has_key(self._filers, a:bufnr)
 endfunction
 
 function! s:Efiler.filer_for(bufnr) abort
