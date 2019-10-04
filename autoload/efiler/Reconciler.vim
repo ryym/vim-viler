@@ -12,30 +12,23 @@ function! efiler#Reconciler#new(work_dir) abort
   return reconciler
 endfunction
 
-function! s:Reconciler.reconcile(changeset) abort
-  let cs = a:changeset
-
-  let copied = []
-  let moved = []
-  for dest in keys(cs.copied)
-    let entry = cs.copied[dest]
-    call add(has_key(cs.deleted, entry.src_path) ? moved : copied, entry)
-  endfor
+function! s:Reconciler.apply(operations) abort
+  let op = a:operations
 
   " 1. Move to temporary directory.
-  let tmp_moves = self._move_files_tmp(moved)
+  let tmp_moves = self._move_files_tmp(op.move)
 
   " 2. Delete
-  " call self._delete_files(keys(cs.deleted))
+  " call self._delete_files(keys(op.delete))
 
   " 3. Move
-  call self._move_files(moved, tmp_moves)
+  call self._move_files(op.move, tmp_moves)
 
   " " 4. Copy
-  " call self._copy_files(copied)
+  " call self._copy_files(op.copy)
 
   " " 5. Add
-  " call self._add_files(keys(cs.added))
+  " call self._add_files(keys(op.add))
 endfunction
 
 function! s:Reconciler._move_files_tmp(entries) abort

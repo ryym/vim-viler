@@ -5,8 +5,13 @@ function! efiler#DiffChecker#new() abort
   return checker
 endfunction
 
-function! s:DiffChecker.gather_changes(buf, nodes, changeset) abort
+function! s:new_diff() abort
+  return {'added': [], 'copied': [], 'deleted': []}
+endfunction
+
+function! s:DiffChecker.gather_changes(buf, nodes) abort
   let dir = a:buf.current_dir()
+  let diff = s:new_diff()
   call self._gather_changes(
     \   {
     \     'path': dir.path,
@@ -15,11 +20,12 @@ function! s:DiffChecker.gather_changes(buf, nodes, changeset) abort
     \   },
     \   a:buf,
     \   a:nodes,
-    \   a:changeset,
+    \   diff,
     \ )
+  return diff
 endfunction
 
-function! s:DiffChecker._gather_changes(dir, buf, nodes, changes) abort
+function! s:DiffChecker._gather_changes(dir, buf, nodes, diff) abort
   let l = a:dir.lnum
   let last_lnum = a:buf.lnum_last()
   let unchanged_files = {}
@@ -36,7 +42,7 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, changes) abort
     let row_abs_path = a:dir.path . '/' . row.name
 
     if row.is_new
-      let a:changes.added[row_abs_path] = 1
+      call add(a:diff.added, row_abs_path)
       " TODO: Handle nested directories.
       continue
     endif
@@ -48,10 +54,10 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, changes) abort
     " the file was copied (or moved).
     if node_abs_path != row_abs_path
       " TODO: Consider the case a same file is copied (or moved) to multiple paths.
-      let a:changes.copied[row_abs_path] = {
+      call add(a:diff.copied, {
         \   'src_path': node_abs_path,
         \   'dest_path': row_abs_path,
-        \ }
+        \ })
     else
       let unchanged_files[node.name] = 1
     endif
@@ -67,7 +73,7 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, changes) abort
         \   },
         \   a:buf,
         \   a:nodes,
-        \   a:changes,
+        \   a:diff,
         \ )
       let l = lnum - 1
     endif
@@ -77,7 +83,7 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, changes) abort
   let real_files = readdir(a:dir.path)
   for name in real_files
     if !has_key(unchanged_files, name)
-      let a:changes.deleted[a:dir.path . '/' . name] = 1
+      call add(a:diff.deleted, a:dir.path . '/' . name)
     endif
   endfor
 

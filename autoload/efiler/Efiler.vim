@@ -8,13 +8,15 @@ let s:Efiler = {
 function! efiler#Efiler#create() abort
   let id_gen = efiler#IdGen#new()
   let diff_checker = efiler#DiffChecker#new()
-  return efiler#Efiler#new(id_gen, diff_checker)
+  let arbitrator = efiler#Arbitrator#new()
+  return efiler#Efiler#new(id_gen, diff_checker, arbitrator)
 endfunction
 
-function! efiler#Efiler#new(id_gen, diff_checker) abort
+function! efiler#Efiler#new(id_gen, diff_checker, arbitrator) abort
   let efiler = deepcopy(s:Efiler)
   let efiler._id_gen = a:id_gen
   let efiler._diff_checker = a:diff_checker
+  let efiler._arbitrator = a:arbitrator
   return efiler
 endfunction
 
@@ -53,18 +55,15 @@ function! s:Efiler.filer_for(bufnr) abort
 endfunction
 
 function! s:Efiler.apply_changes() abort
-  let changeset = {
-    \   'added': {},
-    \   'copied': {},
-    \   'deleted': {},
-    \ }
-
+  let diffs = []
   for bufnr in keys(self._filers)
     let filer = self._filers[bufnr]
-    call filer.gather_changes(changeset)
-    " TODO: Gather changes from all filers.
-    break
+    let diff = filer.gather_changes()
+    call add(diffs, diff)
   endfor
+
+  " TODO: Consider changes of all filers.
+  let ops = self._arbitrator.decide_operations(diffs[0])
 
   " TODO: Use actual temporary directory.
   let work_dir = s:repo_root . '/_mv_tmp'
@@ -72,5 +71,5 @@ function! s:Efiler.apply_changes() abort
   call mkdir(work_dir)
 
   let reconciler = efiler#Reconciler#new(work_dir)
-  call reconciler.reconcile(changeset)
+  call reconciler.apply(ops)
 endfunction

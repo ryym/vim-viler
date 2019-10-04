@@ -188,6 +188,6 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
   call self._buf.put_cursor(cursor_lnum, 1)
 endfunction
 
-function! s:Filer.gather_changes(changeset) abort
-  call self._diff_checker.gather_changes(self._buf, self._nodes, a:changeset)
+function! s:Filer.gather_changes() abort
+  return self._diff_checker.gather_changes(self._buf, self._nodes)
 endfunction
