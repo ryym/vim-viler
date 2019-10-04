@@ -66,5 +66,11 @@ function! s:Efiler.apply_changes() abort
     break
   endfor
 
-  echom string(changeset)
+  " TODO: Use actual temporary directory.
+  let work_dir = s:repo_root . '/_mv_tmp'
+  call system('rm -rf ' . work_dir)
+  call mkdir(work_dir)
+
+  let reconciler = efiler#Reconciler#new(work_dir)
+  call reconciler.reconcile(changeset)
 endfunction

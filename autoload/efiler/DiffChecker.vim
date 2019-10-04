@@ -47,7 +47,10 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, changes) abort
     " If the row's path differs from the original path,
     " the file was copied (or moved).
     if node_abs_path != row_abs_path
-      let a:changes.copied[row_abs_path] = {'src_path': node_abs_path}
+      let a:changes.copied[row_abs_path] = {
+        \   'src_path': node_abs_path,
+        \   'dest_path': row_abs_path,
+        \ }
     else
       let unchanged_files[node.name] = 1
     endif
