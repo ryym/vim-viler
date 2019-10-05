@@ -27,8 +27,8 @@ function! s:Reconciler.apply(operations) abort
   " 4. Copy
   call self._copy_files(op.copy)
 
-  " " 5. Add
-  " call self._add_files(keys(op.add))
+  " 5. Add
+  call self._add_files(op.add)
 endfunction
 
 function! s:Reconciler._move_files_tmp(entries) abort
@@ -77,6 +77,16 @@ function! s:Reconciler._copy_files(entries) abort
 
     " TODO: Make it cross-platform.
     let output = system('cp ' . shellescape(entry.src_path) . ' ' . shellescape(entry.dest_path))
+    if v:shell_error != 0
+      throw output
+    endif
+  endfor
+endfunction
+
+function! s:Reconciler._add_files(paths) abort
+  for path in a:paths
+    "TODO: Make it cross-platform.
+    let output = system('touch ' . shellescape(path))
     if v:shell_error != 0
       throw output
     endif
