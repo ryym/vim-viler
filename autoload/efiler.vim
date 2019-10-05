@@ -63,6 +63,13 @@ function! efiler#redo() abort
 endfunction
 
 function! efiler#apply_changes() abort
-  call s:efiler.apply_changes()
-  call efiler#open()
+  try
+    call s:efiler.apply_changes()
+    call efiler#open()
+  catch
+    " Rethrow the caught exception to:
+    " - avoid printing the stack trace (function names)
+    " - be sure to abort BufWrite on unexpected errors (e.g. unknown function).
+    throw '[efiler] ' . v:exception
+  endtry
 endfunction
