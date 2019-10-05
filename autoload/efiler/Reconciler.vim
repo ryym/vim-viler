@@ -24,8 +24,8 @@ function! s:Reconciler.apply(operations) abort
   " 3. Move
   call self._move_files(op.move, tmp_moves)
 
-  " " 4. Copy
-  " call self._copy_files(op.copy)
+  " 4. Copy
+  call self._copy_files(op.copy)
 
   " " 5. Add
   " call self._add_files(keys(op.add))
@@ -65,6 +65,20 @@ function! s:Reconciler._delete_files(paths) abort
       call delete(path, "rf")
     elseif type == s:FILE_TYPE.FILE
       call delete(path)
+    endif
+  endfor
+endfunction
+
+function! s:Reconciler._copy_files(entries) abort
+  for entry in a:entries
+    if s:ensure_file_exists(entry.src_path, 'copy') == s:FILE_TYPE.NOT_EXIST
+      continue
+    endif
+
+    " TODO: Make it cross-platform.
+    let output = system('cp ' . shellescape(entry.src_path) . ' ' . shellescape(entry.dest_path))
+    if v:shell_error != 0
+      throw output
     endif
   endfor
 endfunction
