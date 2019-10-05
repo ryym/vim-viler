@@ -67,6 +67,9 @@ function! s:Efiler.apply_changes() abort
   " TODO: Consider changes of all filers.
   let ops = self._arbitrator.decide_operations(diffs[0])
 
+  " TODO: Just do reconciliation without the confirmation.
+  " Instead of that, store deleted files in somewhere to
+  " allow users to restore them later if needed.
   " FIXME: We don't want to show 'Press ENTER to continue' after the confirmation.
   if len(ops.delete) > 0
     " Should show all files inside it if a non-empty directory will be deleted.

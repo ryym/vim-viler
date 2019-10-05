@@ -116,6 +116,9 @@ function! s:Buffer.redo() abort
   endif
 
   silent redo
+
+  " TODO: Sometimes 'redo' should change the 'modified' from 'no' to 'yes'.
+  " (e.g. edit -> undo [not modified] -> redo [modified])
   call self.save()
 endfunction
 
