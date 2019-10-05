@@ -67,6 +67,16 @@ function! s:Efiler.apply_changes() abort
   " TODO: Consider changes of all filers.
   let ops = self._arbitrator.decide_operations(diffs[0])
 
+  " FIXME: We don't want to show 'Press ENTER to continue' after the confirmation.
+  if len(ops.delete) > 0
+    " Should show all files inside it if a non-empty directory will be deleted.
+    let filenames = join(ops.delete, ', ')
+    let answer = confirm('Are you sure to delete ' . filenames, "yes\nno")
+    if answer != 1
+      throw 'Cancelled to save'
+    endif
+  endif
+
   let reconciler_work_dir = self._work_dir . '/mv_tmp'
   if !isdirectory(reconciler_work_dir)
     call mkdir(reconciler_work_dir)
