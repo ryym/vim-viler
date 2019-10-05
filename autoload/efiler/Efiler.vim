@@ -5,15 +5,16 @@ let s:Efiler = {
   \   '_filers': {},
   \ }
 
-function! efiler#Efiler#create() abort
+function! efiler#Efiler#create(work_dir) abort
   let id_gen = efiler#IdGen#new()
   let diff_checker = efiler#DiffChecker#new()
   let arbitrator = efiler#Arbitrator#new()
-  return efiler#Efiler#new(id_gen, diff_checker, arbitrator)
+  return efiler#Efiler#new(a:work_dir, id_gen, diff_checker, arbitrator)
 endfunction
 
-function! efiler#Efiler#new(id_gen, diff_checker, arbitrator) abort
+function! efiler#Efiler#new(work_dir, id_gen, diff_checker, arbitrator) abort
   let efiler = deepcopy(s:Efiler)
+  let efiler._work_dir = a:work_dir
   let efiler._id_gen = a:id_gen
   let efiler._diff_checker = a:diff_checker
   let efiler._arbitrator = a:arbitrator
@@ -21,11 +22,12 @@ function! efiler#Efiler#new(id_gen, diff_checker, arbitrator) abort
 endfunction
 
 function! s:Efiler.create_filer(dir) abort
-  let temp_file = tempname() . '.efiler'
+  let self._filer_id += 1
+
+  let temp_file = self._work_dir . '/filer' . self._filer_id . '.efiler'
   let buffer = efiler#Buffer#new()
   let bufnr = buffer.open(temp_file)
 
-  let self._filer_id += 1
   let filer = efiler#Filer#new(
     \   self._filer_id,
     \   buffer,
@@ -65,11 +67,11 @@ function! s:Efiler.apply_changes() abort
   " TODO: Consider changes of all filers.
   let ops = self._arbitrator.decide_operations(diffs[0])
 
-  " TODO: Use actual temporary directory.
-  let work_dir = s:repo_root . '/_mv_tmp'
-  call system('rm -rf ' . work_dir)
-  call mkdir(work_dir)
+  let reconciler_work_dir = self._work_dir . '/mv_tmp'
+  if !isdirectory(reconciler_work_dir)
+    call mkdir(reconciler_work_dir)
+  endif
 
-  let reconciler = efiler#Reconciler#new(work_dir)
+  let reconciler = efiler#Reconciler#new(reconciler_work_dir)
   call reconciler.apply(ops)
 endfunction

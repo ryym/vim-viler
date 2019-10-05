@@ -5,7 +5,9 @@ function! efiler#enable() abort
     autocmd BufWritePre *.efiler call efiler#apply_changes()
   augroup END
 
-  let s:efiler = efiler#Efiler#create()
+  let work_dir = tempname()
+  call mkdir(work_dir)
+  let s:efiler = efiler#Efiler#create(work_dir)
 
   command! Efiler call efiler#open()
 endfunction
