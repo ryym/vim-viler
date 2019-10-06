@@ -98,28 +98,25 @@ function! s:Buffer.modified() abort
 endfunction
 
 function! s:Buffer.undo() abort
-  let modified = &modified
-  if modified
-    undo
-    return
-  endif
-
   silent undo
-  call self.save()
 endfunction
 
 function! s:Buffer.redo() abort
-  let modified = &modified
-  if modified
-    redo
-    return
-  endif
+  let history = undotree().entries
+
+  " Decide whether the 'redo'ne buffer should be modified or not.
+  " For example, We don't want to make a buffer 'modified' just by 'redo'ing tree toggling.
+  let modified = 0
+  for entry in history
+    if has_key(entry, 'curhead')
+      let modified = !has_key(entry, 'save')
+      break
+    endif
+  endfor
 
   silent redo
 
-  " TODO: Sometimes 'redo' should change the 'modified' from 'no' to 'yes'.
-  " (e.g. edit -> undo [not modified] -> redo [modified])
-  call self.save()
+  return modified
 endfunction
 
 function! s:node_to_line(node, depth, state) abort

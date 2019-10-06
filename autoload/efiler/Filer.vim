@@ -140,6 +140,7 @@ function! s:Filer.undo() abort
   call self._clear_nodes()
   call self._buf.undo()
   call self._restore_nodes_on_buf(cur_dir)
+  call self._buf.save()
 endfunction
 
 function! s:Filer.redo() abort
@@ -150,8 +151,12 @@ function! s:Filer.redo() abort
 
   let cur_dir = self._buf.current_dir()
   call self._clear_nodes()
-  call self._buf.redo()
+  let modified = self._buf.redo()
   call self._restore_nodes_on_buf(cur_dir)
+
+  if !modified
+    call self._buf.save()
+  endif
 endfunction
 
 function! s:Filer._restore_nodes_on_buf(prev_dir) abort
@@ -167,6 +172,10 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
   while l < last_l
     let l += 1
     let row = self._buf.node_row(l)
+
+    if row.is_new
+      continue
+    endif
 
     if prev_depth < row.depth
       let dir_path .= '/' . prev_name
@@ -184,8 +193,9 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
     endif
   endwhile
 
-  let cursor_lnum = 0 < prev_dir_lnum ? prev_dir_lnum : self._buf.lnum_first()
-  call self._buf.put_cursor(cursor_lnum, 1)
+  if 0 < prev_dir_lnum
+    call self._buf.put_cursor(prev_dir_lnum, 1)
+  endif
 endfunction
 
 function! s:Filer.gather_changes() abort
