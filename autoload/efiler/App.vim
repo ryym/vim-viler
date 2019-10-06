@@ -1,19 +1,19 @@
 let s:repo_root = expand('<sfile>:p:h:h:h')
 
-let s:Efiler = {
+let s:App = {
   \   '_filer_id': 0,
   \   '_filers': {},
   \ }
 
-function! efiler#Efiler#create(work_dir) abort
+function! efiler#App#create(work_dir) abort
   let id_gen = efiler#IdGen#new()
   let diff_checker = efiler#DiffChecker#new()
   let arbitrator = efiler#Arbitrator#new()
-  return efiler#Efiler#new(a:work_dir, id_gen, diff_checker, arbitrator)
+  return efiler#App#new(a:work_dir, id_gen, diff_checker, arbitrator)
 endfunction
 
-function! efiler#Efiler#new(work_dir, id_gen, diff_checker, arbitrator) abort
-  let efiler = deepcopy(s:Efiler)
+function! efiler#App#new(work_dir, id_gen, diff_checker, arbitrator) abort
+  let efiler = deepcopy(s:App)
   let efiler._work_dir = a:work_dir
   let efiler._id_gen = a:id_gen
   let efiler._diff_checker = a:diff_checker
@@ -21,7 +21,7 @@ function! efiler#Efiler#new(work_dir, id_gen, diff_checker, arbitrator) abort
   return efiler
 endfunction
 
-function! s:Efiler.create_filer(dir) abort
+function! s:App.create_filer(dir) abort
   let self._filer_id += 1
 
   let temp_file = self._work_dir . '/filer' . self._filer_id . '.efiler'
@@ -39,7 +39,7 @@ function! s:Efiler.create_filer(dir) abort
   call filer.display(a:dir)
 endfunction
 
-function! s:Efiler.open(bufnr, dir) abort
+function! s:App.open(bufnr, dir) abort
   if !has_key(self._filers, a:bufnr)
     throw '[efiler] Unknown buffer' a:bufnr
   endif
@@ -48,15 +48,15 @@ function! s:Efiler.open(bufnr, dir) abort
   call filer.display(a:dir)
 endfunction
 
-function! s:Efiler.has_filer_for(bufnr) abort
+function! s:App.has_filer_for(bufnr) abort
   return has_key(self._filers, a:bufnr)
 endfunction
 
-function! s:Efiler.filer_for(bufnr) abort
+function! s:App.filer_for(bufnr) abort
   return get(self._filers, a:bufnr, 0)
 endfunction
 
-function! s:Efiler.apply_changes() abort
+function! s:App.apply_changes() abort
   let diffs = []
   for bufnr in keys(self._filers)
     let filer = self._filers[bufnr]

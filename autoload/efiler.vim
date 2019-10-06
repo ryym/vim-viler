@@ -7,7 +7,7 @@ function! efiler#enable() abort
 
   let work_dir = tempname()
   call mkdir(work_dir)
-  let s:efiler = efiler#Efiler#create(work_dir)
+  let s:efiler = efiler#App#create(work_dir)
 
   command! Efiler call efiler#open()
 endfunction
