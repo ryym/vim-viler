@@ -1,1 +1,2 @@
-syntax match EfilerLineMeta /\v^n\d+s[01]/ conceal
+syntax match EfilerLineMeta /\v^\s*\zsn\d+s[01]\ze\s/ conceal
+highlight link EfilerLineMeta Comment

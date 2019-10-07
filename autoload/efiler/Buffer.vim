@@ -120,9 +120,9 @@ function! s:Buffer.redo() abort
 endfunction
 
 function! s:node_to_line(node, depth, state) abort
-  let meta = s:node_meta_to_line(a:node.id, a:state)
   let indent = s:make_indent(a:depth)
-  return meta . indent . a:node.name . (a:node.is_dir ? '/' : '')
+  let meta = s:node_meta_to_line(a:node.id, a:state)
+  return indent . meta . a:node.name . (a:node.is_dir ? '/' : '')
 endfunction
 
 function! s:node_meta_to_line(node_id, meta) abort
@@ -140,8 +140,11 @@ function! s:make_indent(level) abort
 endfunction
 
 function! s:decode_node_line(whole_line) abort
-  let [metaline, line] = s:split_head_tail(a:whole_line, '\vn\d+s[01]')
-  let [indent, name] = s:split_head_tail(line, '\v\s+')
+  let [indent, line] = s:split_head_tail(a:whole_line, '\v\s*')
+  let [metaline, name] = s:split_head_tail(line, '\vn\d+s[01]')
+
+  let metaline = trim(metaline)
+  let name = trim(name)
   let is_dir = len(name) > 0 && name[len(name) - 1] == '/'
 
   let row = {
@@ -184,7 +187,7 @@ endfunction
 
 function! s:split_head_tail(str, head_pat) abort
   let head_end = matchend(a:str, a:head_pat, 0, 1)
-  if head_end == -1
+  if head_end == 0 || head_end == -1
     return ['', a:str]
   endif
 
