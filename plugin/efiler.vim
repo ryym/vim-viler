@@ -1,3 +1,0 @@
-" efiler
-
-call efiler#enable()

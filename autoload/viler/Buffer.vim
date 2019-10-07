@@ -1,6 +1,6 @@
 let s:Buffer = {'_nr': 0}
 
-function! efiler#Buffer#new() abort
+function! viler#Buffer#new() abort
   let buffer = deepcopy(s:Buffer)
   return buffer
 endfunction

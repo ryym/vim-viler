@@ -1,6 +1,6 @@
 let s:Reconciler = {}
 
-function! efiler#Reconciler#new(work_dir) abort
+function! viler#Reconciler#new(work_dir) abort
   let reconciler = deepcopy(s:Reconciler)
 
   let wd = a:work_dir
@@ -103,6 +103,6 @@ function! s:ensure_file_exists(path, operation) abort
     return s:FILE_TYPE.FILE
   endif
 
-  echom '[efiler] file not found to ' . a:operation . ': ' . a:path . '. something wrong.'
+  echom '[viler] file not found to ' . a:operation . ': ' . a:path . '. something wrong.'
   return s:FILE_TYPE.NOT_EXIST
 endfunction

@@ -1,6 +1,6 @@
 let s:Filer = {}
 
-function! efiler#Filer#new(id, buf, id_gen, diff_checker) abort
+function! viler#Filer#new(id, buf, id_gen, diff_checker) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
   let filer._id = a:id
@@ -34,7 +34,7 @@ function! s:Filer._make_node_with_id(abs_path, id) abort
   if has_key(self._nodes, a:id)
     return self._nodes[a:id]
   endif
-  let node = efiler#Node#new(a:id, a:abs_path)
+  let node = viler#Node#new(a:id, a:abs_path)
   let self._nodes[node.id] = node
   return node
 endfunction
@@ -60,7 +60,7 @@ endfunction
 
 function! s:Filer._node(id) abort
   if !has_key(self._nodes, a:id)
-    throw '[efiler] Unknown Node ID' a:id
+    throw '[viler] Unknown Node ID' a:id
   endif
   return self._nodes[a:id]
 endfunction

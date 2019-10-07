@@ -5,7 +5,7 @@ let s:Node = {
   \   'is_dir': 0,
   \ }
 
-function! efiler#Node#new(id, abs_path) abort
+function! viler#Node#new(id, abs_path) abort
   let node = deepcopy(s:Node)
   let node.id = a:id
   let node.dir = fnamemodify(a:abs_path, ':h')

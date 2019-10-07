@@ -1,6 +1,6 @@
 let s:DiffChecker = {}
 
-function! efiler#DiffChecker#new() abort
+function! viler#DiffChecker#new() abort
   let checker = deepcopy(s:DiffChecker)
   return checker
 endfunction

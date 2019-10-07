@@ -1,6 +1,6 @@
 let s:IdGen = {'_id': 0}
 
-function! efiler#IdGen#new() abort
+function! viler#IdGen#new() abort
   let id_gen = deepcopy(s:IdGen)
   return id_gen
 endfunction

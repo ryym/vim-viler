@@ -1,0 +1,3 @@
+" viler
+
+call viler#enable()

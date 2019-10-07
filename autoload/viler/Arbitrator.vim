@@ -1,6 +1,6 @@
 let s:Arbitrator = {}
 
-function! efiler#Arbitrator#new() abort
+function! viler#Arbitrator#new() abort
   let arbitrator = deepcopy(s:Arbitrator)
   return arbitrator
 endfunction

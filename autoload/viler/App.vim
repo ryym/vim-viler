@@ -5,30 +5,30 @@ let s:App = {
   \   '_filers': {},
   \ }
 
-function! efiler#App#create(work_dir) abort
-  let id_gen = efiler#IdGen#new()
-  let diff_checker = efiler#DiffChecker#new()
-  let arbitrator = efiler#Arbitrator#new()
-  return efiler#App#new(a:work_dir, id_gen, diff_checker, arbitrator)
+function! viler#App#create(work_dir) abort
+  let id_gen = viler#IdGen#new()
+  let diff_checker = viler#DiffChecker#new()
+  let arbitrator = viler#Arbitrator#new()
+  return viler#App#new(a:work_dir, id_gen, diff_checker, arbitrator)
 endfunction
 
-function! efiler#App#new(work_dir, id_gen, diff_checker, arbitrator) abort
-  let efiler = deepcopy(s:App)
-  let efiler._work_dir = a:work_dir
-  let efiler._id_gen = a:id_gen
-  let efiler._diff_checker = a:diff_checker
-  let efiler._arbitrator = a:arbitrator
-  return efiler
+function! viler#App#new(work_dir, id_gen, diff_checker, arbitrator) abort
+  let viler = deepcopy(s:App)
+  let viler._work_dir = a:work_dir
+  let viler._id_gen = a:id_gen
+  let viler._diff_checker = a:diff_checker
+  let viler._arbitrator = a:arbitrator
+  return viler
 endfunction
 
 function! s:App.create_filer(dir) abort
   let self._filer_id += 1
 
-  let temp_file = self._work_dir . '/filer' . self._filer_id . '.efiler'
-  let buffer = efiler#Buffer#new()
+  let temp_file = self._work_dir . '/filer' . self._filer_id . '.viler'
+  let buffer = viler#Buffer#new()
   let bufnr = buffer.open(temp_file)
 
-  let filer = efiler#Filer#new(
+  let filer = viler#Filer#new(
     \   self._filer_id,
     \   buffer,
     \   self._id_gen,
@@ -41,7 +41,7 @@ endfunction
 
 function! s:App.open(bufnr, dir) abort
   if !has_key(self._filers, a:bufnr)
-    throw '[efiler] Unknown buffer' a:bufnr
+    throw '[viler] Unknown buffer' a:bufnr
   endif
 
   let filer = self._filers[a:bufnr]
@@ -85,6 +85,6 @@ function! s:App.apply_changes() abort
     call mkdir(reconciler_work_dir)
   endif
 
-  let reconciler = efiler#Reconciler#new(reconciler_work_dir)
+  let reconciler = viler#Reconciler#new(reconciler_work_dir)
   call reconciler.apply(ops)
 endfunction
