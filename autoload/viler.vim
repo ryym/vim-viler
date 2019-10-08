@@ -72,6 +72,6 @@ function! viler#apply_changes() abort
     " Rethrow the caught exception to:
     " - avoid printing the stack trace (function names)
     " - be sure to abort BufWrite on unexpected errors (e.g. unknown function).
-    throw '[viler] ' . v:exception
+    throw v:exception
   endtry
 endfunction
