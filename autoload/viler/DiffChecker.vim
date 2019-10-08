@@ -33,10 +33,13 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, diff) abort
   while l < last_lnum
     let l += 1
 
-    " TODO: Handle cases that a user changes the indent of rows.
     let row = a:buf.node_row(l)
     if row.depth < a:dir.depth
       break
+    endif
+
+    if row.depth != a:dir.depth
+      throw '[vfiler] Wierd indentation at line ' . row.lnum . ': ' . row.name
     endif
 
     let row_abs_path = a:dir.path . '/' . row.name
