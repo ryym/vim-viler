@@ -33,7 +33,6 @@ function! s:App.create_filer(dir) abort
   let node_accessor = self._node_store.accessor_for(bufnr)
 
   let filer = viler#Filer#new(
-    \   self._filer_id,
     \   buffer,
     \   node_accessor,
     \   self._diff_checker,
