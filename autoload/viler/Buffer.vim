@@ -54,7 +54,7 @@ endfunction
 function! s:Buffer.display_nodes(dir_node, nodes) abort
   call setbufline(self._nr, 1, s:dir_metadata(a:dir_node))
 
-  let lines = map(copy(a:nodes), {_, n -> s:node_to_line(n, 0, {})})
+  let lines = map(copy(a:nodes), {_, n -> self._node_to_line(n, 0, {})})
   call setbufline(self._nr, 2, lines)
 
   let first_line_to_remove = len(a:nodes) + 2
@@ -64,7 +64,7 @@ function! s:Buffer.display_nodes(dir_node, nodes) abort
 endfunction
 
 function! s:Buffer.append_nodes(lnum, nodes, depth) abort
-  let lines = map(copy(a:nodes), {_, n -> s:node_to_line(n, a:depth, {})})
+  let lines = map(copy(a:nodes), {_, n -> self._node_to_line(n, a:depth, {})})
   call append(a:lnum, lines)
 endfunction
 
@@ -89,7 +89,7 @@ function! s:Buffer.update_node_row(node, row, state_changes) abort
   for key in keys(a:state_changes)
     let state[key] = a:state_changes[key]
   endfor
-  let line = s:node_to_line(a:node, a:row.depth, state)
+  let line = self._node_to_line(a:node, a:row.depth, state)
   call setbufline(self._nr, a:row.lnum, line)
 endfunction
 
@@ -119,14 +119,13 @@ function! s:Buffer.redo() abort
   return modified
 endfunction
 
-function! s:node_to_line(node, depth, state) abort
+function! s:Buffer._node_to_line(node, depth, state) abort
   let indent = s:make_indent(a:depth)
-  let meta = s:node_meta_to_line(a:node.id, a:state)
-  return indent . meta . a:node.name . (a:node.is_dir ? '/' : '')
-endfunction
 
-function! s:node_meta_to_line(node_id, meta) abort
-  return a:node_id . '_' . get(a:meta, 'tree_open', 0) . ' '
+  let state_data = get(a:state, 'tree_open', 0)
+  let meta = join([self._nr, a:node.id, state_data], '_')
+
+  return indent . meta . ' ' . a:node.name . (a:node.is_dir ? '/' : '')
 endfunction
 
 function! s:make_indent(level) abort
@@ -155,8 +154,9 @@ function! s:decode_node_line(whole_line) abort
     \ }
 
   if metaline != ''
-    let [node_id, state] = s:decode_node_line_meta(metaline)
+    let [bufnr, node_id, state] = s:decode_node_line_meta(metaline)
     let row.is_new = 0
+    let row.bufnr = bufnr
     let row.node_id = node_id
     let row.state = state
   endif
@@ -165,11 +165,9 @@ function! s:decode_node_line(whole_line) abort
 endfunction
 
 function! s:decode_node_line_meta(meta) abort
-  let [node_id_str, state] = split(a:meta, '_')
-
-  let node_id = str2nr(node_id_str, 10)
-  let tree_open = str2nr(state[0], 10)
-  return [node_id, {'tree_open': tree_open}]
+  let [bufnr, node_id, state] = split(a:meta, '_')
+  let state = {'tree_open': str2nr(state[0])}
+  return [str2nr(bufnr), str2nr(node_id), state]
 endfunction
 
 function! s:dir_metadata(dir_node) abort
