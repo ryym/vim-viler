@@ -1,7 +1,8 @@
 let s:DiffChecker = {}
 
-function! viler#DiffChecker#new() abort
+function! viler#DiffChecker#new(node_store) abort
   let checker = deepcopy(s:DiffChecker)
+  let checker._node_store = a:node_store
   return checker
 endfunction
 
@@ -9,7 +10,7 @@ function! s:new_diff() abort
   return {'added': [], 'copied': [], 'deleted': []}
 endfunction
 
-function! s:DiffChecker.gather_changes(buf, nodes) abort
+function! s:DiffChecker.gather_changes(buf) abort
   let dir = a:buf.current_dir()
   let diff = s:new_diff()
   call self._gather_changes(
@@ -19,13 +20,12 @@ function! s:DiffChecker.gather_changes(buf, nodes) abort
     \     'depth': 0,
     \   },
     \   a:buf,
-    \   a:nodes,
     \   diff,
     \ )
   return diff
 endfunction
 
-function! s:DiffChecker._gather_changes(dir, buf, nodes, diff) abort
+function! s:DiffChecker._gather_changes(dir, buf, diff) abort
   let l = a:dir.lnum
   let last_lnum = a:buf.lnum_last()
   let unchanged_files = {}
@@ -50,7 +50,7 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, diff) abort
       continue
     endif
 
-    let node = a:nodes.get(row.node_id)
+    let node = self._node_store.get_node(a:buf.nr(), row.node_id)
     let node_abs_path = node.abs_path()
 
     " If the row's path differs from the original path,
@@ -75,7 +75,6 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, diff) abort
         \     'depth': a:dir.depth + 1,
         \   },
         \   a:buf,
-        \   a:nodes,
         \   a:diff,
         \ )
       let l = lnum - 1

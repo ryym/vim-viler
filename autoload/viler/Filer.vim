@@ -172,5 +172,5 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
 endfunction
 
 function! s:Filer.gather_changes() abort
-  return self._diff_checker.gather_changes(self._buf, self._nodes)
+  return self._diff_checker.gather_changes(self._buf)
 endfunction

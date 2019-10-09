@@ -4,7 +4,7 @@ let s:App = {}
 
 function! viler#App#create(work_dir) abort
   let node_store = viler#NodeStore#new()
-  let diff_checker = viler#DiffChecker#new()
+  let diff_checker = viler#DiffChecker#new(node_store)
   let arbitrator = viler#Arbitrator#new()
   return viler#App#new(a:work_dir, node_store, diff_checker, arbitrator)
 endfunction

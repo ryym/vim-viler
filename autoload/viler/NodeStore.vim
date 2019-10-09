@@ -12,6 +12,11 @@ function! s:NodeStore.try_get_node(group_id, id) abort
   return get(group, a:id, 0)
 endfunction
 
+function! s:NodeStore.get_node(group_id, id) abort
+  let group = self._node_groups[a:group_id]
+  return group[a:id]
+endfunction
+
 function! s:NodeStore.remove_node(group_id, id) abort
   let group = self._node_groups[a:group_id]
   call remove(group, a:id)
