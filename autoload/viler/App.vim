@@ -3,18 +3,18 @@ let s:repo_root = expand('<sfile>:p:h:h:h')
 let s:App = {}
 
 function! viler#App#create(work_dir) abort
-  let id_gen = viler#IdGen#new()
+  let node_store = viler#NodeStore#new()
   let diff_checker = viler#DiffChecker#new()
   let arbitrator = viler#Arbitrator#new()
-  return viler#App#new(a:work_dir, id_gen, diff_checker, arbitrator)
+  return viler#App#new(a:work_dir, node_store, diff_checker, arbitrator)
 endfunction
 
-function! viler#App#new(work_dir, id_gen, diff_checker, arbitrator) abort
+function! viler#App#new(work_dir, node_store, diff_checker, arbitrator) abort
   let viler = deepcopy(s:App)
   let viler._filer_id = 0
   let viler._filers = {}
   let viler._work_dir = a:work_dir
-  let viler._id_gen = a:id_gen
+  let viler._node_store = a:node_store
   let viler._diff_checker = a:diff_checker
   let viler._arbitrator = a:arbitrator
   return viler
@@ -26,17 +26,16 @@ endfunction
 
 function! s:App.create_filer(dir) abort
   let self._filer_id += 1
-
   let temp_file = self._work_dir . '/filer' . self._filer_id . '.viler'
   let buffer = viler#Buffer#new()
   let bufnr = buffer.open(temp_file)
 
-  let node_store = viler#NodeStore#new(self._id_gen)
+  let node_accessor = self._node_store.accessor_for(bufnr)
 
   let filer = viler#Filer#new(
     \   self._filer_id,
     \   buffer,
-    \   node_store,
+    \   node_accessor,
     \   self._diff_checker,
     \ )
   let self._filers[bufnr] = filer

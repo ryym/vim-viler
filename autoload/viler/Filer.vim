@@ -1,11 +1,11 @@
 let s:Filer = {}
 
-function! viler#Filer#new(id, buf, node_store, diff_checker) abort
+function! viler#Filer#new(id, buf, node_accessor, diff_checker) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
   let filer._id = a:id
   let filer._diff_checker = a:diff_checker
-  let filer._nodes = a:node_store
+  let filer._nodes = a:node_accessor
   return filer
 endfunction
 
