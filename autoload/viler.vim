@@ -7,19 +7,19 @@ function! viler#enable() abort
 
   let work_dir = tempname()
   call mkdir(work_dir)
-  let s:viler = viler#App#create(work_dir)
+  let s:app = viler#App#create(work_dir)
 
   command! Viler call viler#open()
 endfunction
 
 function! viler#open() abort
   let cur_bufnr = bufnr('%')
-  if s:viler.has_filer_for(cur_bufnr)
-    call s:viler.open(cur_bufnr, getcwd())
+  if s:app.has_filer_for(cur_bufnr)
+    call s:app.open(cur_bufnr, getcwd())
     return
   endif
 
-  call s:viler.create_filer(getcwd())
+  call s:app.create_filer(getcwd())
 
   setlocal conceallevel=0 " XXX: For debag.
   setlocal concealcursor=nvic
@@ -37,7 +37,7 @@ function! viler#_debug() abort
 endfunction
 
 function! s:current_filer() abort
-  let filer = s:viler.filer_for(bufnr('%'))
+  let filer = s:app.filer_for(bufnr('%'))
   if type(filer) == v:t_number
     throw '[viler] This buffer is not a file explorer'
   endif
@@ -65,13 +65,20 @@ function! viler#redo() abort
 endfunction
 
 function! viler#apply_changes() abort
+  if s:app.is_debug()
+    call s:app.apply_changes()
+    call viler#open()
+    return
+  endif
+
   try
-    call s:viler.apply_changes()
+    call s:app.apply_changes()
     call viler#open()
   catch
     " Rethrow the caught exception to:
     " - avoid printing the stack trace (function names)
     " - be sure to abort BufWrite on unexpected errors (e.g. unknown function).
-    throw v:exception
+    " Also a space prefix is necessary because we cannot throw an error starting with 'Vim:'.
+    throw ' ' . v:exception
   endtry
 endfunction

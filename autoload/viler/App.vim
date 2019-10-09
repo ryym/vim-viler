@@ -1,9 +1,6 @@
 let s:repo_root = expand('<sfile>:p:h:h:h')
 
-let s:App = {
-  \   '_filer_id': 0,
-  \   '_filers': {},
-  \ }
+let s:App = {}
 
 function! viler#App#create(work_dir) abort
   let id_gen = viler#IdGen#new()
@@ -14,11 +11,17 @@ endfunction
 
 function! viler#App#new(work_dir, id_gen, diff_checker, arbitrator) abort
   let viler = deepcopy(s:App)
+  let viler._filer_id = 0
+  let viler._filers = {}
   let viler._work_dir = a:work_dir
   let viler._id_gen = a:id_gen
   let viler._diff_checker = a:diff_checker
   let viler._arbitrator = a:arbitrator
   return viler
+endfunction
+
+function! s:App.is_debug() abort
+  return 1
 endfunction
 
 function! s:App.create_filer(dir) abort
