@@ -126,7 +126,7 @@ function! s:node_to_line(node, depth, state) abort
 endfunction
 
 function! s:node_meta_to_line(node_id, meta) abort
-  return 'n' . a:node_id . 's' . get(a:meta, 'tree_open', 0) . ' '
+  return a:node_id . '_' . get(a:meta, 'tree_open', 0) . ' '
 endfunction
 
 function! s:make_indent(level) abort
@@ -141,7 +141,7 @@ endfunction
 
 function! s:decode_node_line(whole_line) abort
   let [indent, line] = s:split_head_tail(a:whole_line, '\v\s*')
-  let [metaline, name] = s:split_head_tail(line, '\vn\d+s[01]')
+  let [metaline, name] = s:split_head_tail(line, '\v\S+')
 
   let metaline = trim(metaline)
   let name = trim(name)
@@ -165,22 +165,22 @@ function! s:decode_node_line(whole_line) abort
 endfunction
 
 function! s:decode_node_line_meta(meta) abort
-  let id_end = matchend(a:meta, '\vn\d+', 0, 1)
-  let node_id = str2nr(a:meta[1:id_end-1], 10)
-  let state = a:meta[id_end:]
-  let tree_open = str2nr(state[1], 10)
+  let [node_id_str, state] = split(a:meta, '_')
+
+  let node_id = str2nr(node_id_str, 10)
+  let tree_open = str2nr(state[0], 10)
   return [node_id, {'tree_open': tree_open}]
 endfunction
 
 function! s:dir_metadata(dir_node) abort
-  let meta = 'n' . a:dir_node.id . ' '
+  let meta = a:dir_node.id . ' '
   return meta . a:dir_node.abs_path()
 endfunction
 
 function! s:decode_dir_metadata(line) abort
-  let [meta, dir_path] = s:split_head_tail(a:line, '\vn\d+')
+  let [meta, dir_path] = s:split_head_tail(a:line, '\v\d+')
   return {
-    \   'node_id': str2nr(meta[1:], 10),
+    \   'node_id': str2nr(meta, 10),
     \   'path': trim(dir_path),
     \ }
 endfunction
