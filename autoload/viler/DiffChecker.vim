@@ -50,7 +50,7 @@ function! s:DiffChecker._gather_changes(dir, buf, nodes, diff) abort
       continue
     endif
 
-    let node = a:nodes[row.node_id]
+    let node = a:nodes.get(row.node_id)
     let node_abs_path = node.abs_path()
 
     " If the row's path differs from the original path,

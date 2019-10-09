@@ -28,10 +28,12 @@ function! s:App.create_filer(dir) abort
   let buffer = viler#Buffer#new()
   let bufnr = buffer.open(temp_file)
 
+  let node_store = viler#NodeStore#new(self._id_gen)
+
   let filer = viler#Filer#new(
     \   self._filer_id,
     \   buffer,
-    \   self._id_gen,
+    \   node_store,
     \   self._diff_checker,
     \ )
   let self._filers[bufnr] = filer

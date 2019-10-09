@@ -1,19 +1,18 @@
 let s:Filer = {}
 
-function! viler#Filer#new(id, buf, id_gen, diff_checker) abort
+function! viler#Filer#new(id, buf, node_store, diff_checker) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
   let filer._id = a:id
-  let filer._node_id = a:id_gen
   let filer._diff_checker = a:diff_checker
-  let filer._nodes = {}
+  let filer._nodes = a:node_store
   return filer
 endfunction
 
 function! s:Filer.display(dir) abort
-  call self._clear_nodes()
+  call self._nodes.clear()
 
-  let dir_node = self._make_node(a:dir)
+  let dir_node = self._nodes.make(a:dir)
   let nodes = self._list_children(a:dir)
   call self._buf.display_nodes(dir_node, nodes)
   call self._buf.reset_cursor()
@@ -21,28 +20,10 @@ function! s:Filer.display(dir) abort
   return {'dir': dir_node, 'nodes': nodes}
 endfunction
 
-function! s:Filer._clear_nodes() abort
-  let self._nodes = {}
-endfunction
-
-function! s:Filer._make_node(abs_path) abort
-  let id = self._node_id.make()
-  return self._make_node_with_id(a:abs_path, id)
-endfunction
-
-function! s:Filer._make_node_with_id(abs_path, id) abort
-  if has_key(self._nodes, a:id)
-    return self._nodes[a:id]
-  endif
-  let node = viler#Node#new(a:id, a:abs_path)
-  let self._nodes[node.id] = node
-  return node
-endfunction
-
 function! s:Filer._list_children(dir) abort
   let nodes = []
   for name in readdir(a:dir)
-    let node = self._make_node(a:dir . '/' . name)
+    let node = self._nodes.make(a:dir . '/' . name)
     call add(nodes, node)
   endfor
   return sort(nodes, function('s:sort_nodes_by_type_and_name'))
@@ -58,24 +39,17 @@ function! s:sort_nodes_by_type_and_name(a, b) abort
   return a:a.name < a:b.name ? -1 : 1
 endfunction
 
-function! s:Filer._node(id) abort
-  if !has_key(self._nodes, a:id)
-    throw '[viler] Unknown Node ID' a:id
-  endif
-  return self._nodes[a:id]
-endfunction
-
 function! s:Filer.go_down_cursor_dir() abort
   let row = self._buf.node_row(self._buf.lnum_cursor())
   if row.is_dir
-    let node = self._node(row.node_id)
+    let node = self._nodes.get(row.node_id)
     call self.display(node.abs_path())
   endif
 endfunction
 
 function! s:Filer.go_up_dir() abort
   let dir_id = self._buf.current_dir().node_id
-  let dir_node = self._node(dir_id)
+  let dir_node = self._nodes.get(dir_id)
   let shown_nodes = self.display(dir_node.dir)
 
   let prev_dir_node_id = 0
@@ -101,7 +75,7 @@ function! s:Filer.toggle_tree() abort
     return
   endif
 
-  let node = self._node(row.node_id)
+  let node = self._nodes.get(row.node_id)
   if row.state.tree_open
     call self._buf.update_node_row(node, row, {'tree_open': 0})
     call self._close_tree(node, row)
@@ -123,7 +97,7 @@ function! s:Filer._close_tree(dir_node, dir_row) abort
     if row.depth <= a:dir_row.depth
       break
     endif
-    call remove(self._nodes, row.node_id)
+    call self._nodes.remove(row.node_id)
   endwhile
   if a:dir_row.lnum + 1 < l
     call self._buf.delete_lines(a:dir_row.lnum + 1, l - 1)
@@ -137,7 +111,7 @@ function! s:Filer.undo() abort
   endif
 
   let cur_dir = self._buf.current_dir()
-  call self._clear_nodes()
+  call self._nodes.clear()
   call self._buf.undo()
   call self._restore_nodes_on_buf(cur_dir)
   call self._buf.save()
@@ -150,7 +124,7 @@ function! s:Filer.redo() abort
   endif
 
   let cur_dir = self._buf.current_dir()
-  call self._clear_nodes()
+  call self._nodes.clear()
   let modified = self._buf.redo()
   call self._restore_nodes_on_buf(cur_dir)
 
@@ -161,7 +135,7 @@ endfunction
 
 function! s:Filer._restore_nodes_on_buf(prev_dir) abort
   let cur_dir = self._buf.current_dir()
-  call self._make_node_with_id(cur_dir.path, cur_dir.node_id)
+  call self._nodes.get_or_make(cur_dir.node_id, cur_dir.path)
 
   let prev_dir_lnum = 0
   let prev_depth = 0
@@ -184,7 +158,7 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
     endif
 
     let file_path = dir_path . '/' . row.name
-    call self._make_node_with_id(file_path, row.node_id)
+    call self._nodes.get_or_make(row.node_id, file_path)
     let prev_depth = row.depth
     let prev_name = row.name
 
