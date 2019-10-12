@@ -8,5 +8,9 @@ function! viler#get_indent() abort
   endif
 
   let above = getline(v:lnum - 1)
-  return indent(v:lnum - 1) + (above[len(above) - 1] == '/' ? 2 : 0)
+  let row = viler#Buffer#decode_node_line(above)
+  if row.is_dir && row.state.tree_open
+    return indent(v:lnum - 1) + shiftwidth()
+  endif
+  return indent(v:lnum - 1)
 endfunction

@@ -79,7 +79,7 @@ endfunction
 
 function! s:Buffer.node_row(lnum) abort
   let linestr = getbufline(self._nr, a:lnum)[0]
-  let row = s:decode_node_line(linestr)
+  let row = viler#Buffer#decode_node_line(linestr)
   let row.lnum = a:lnum
   return row
 endfunction
@@ -138,7 +138,7 @@ function! s:make_indent(level) abort
   return s
 endfunction
 
-function! s:decode_node_line(whole_line) abort
+function! viler#Buffer#decode_node_line(whole_line) abort
   let [indent, line] = s:split_head_tail(a:whole_line, '\v\s*')
   let [metaline, name] = s:split_head_tail(line, '\v\S+')
 
