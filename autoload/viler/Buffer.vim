@@ -139,8 +139,18 @@ function! s:make_indent(level) abort
 endfunction
 
 function! viler#Buffer#decode_node_line(whole_line) abort
-  let [indent, line] = s:split_head_tail(a:whole_line, '\v\s*')
-  let [metaline, name] = s:split_head_tail(line, '\v\S+')
+  let [indent, line] = s:split_head_tail(a:whole_line, '\v^\s*')
+
+  let parts = split(line, '\s\+')
+  if len(parts) == 0
+    let name = ''
+    let metaline = ''
+  elseif len(parts) == 1
+    let name = parts[0]
+    let metaline = ''
+  else
+    let [metaline, name] = parts[:1]
+  endif
 
   let metaline = trim(metaline)
   let name = trim(name)
