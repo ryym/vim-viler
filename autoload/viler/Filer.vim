@@ -74,6 +74,8 @@ function! s:Filer.toggle_tree() abort
     return
   endif
 
+  let modified = self._buf.modified()
+
   let node = self._nodes.get(row.node_id)
   if row.state.tree_open
     call self._buf.update_node_row(node, row, {'tree_open': 0})
@@ -84,7 +86,9 @@ function! s:Filer.toggle_tree() abort
     call self._buf.append_nodes(row.lnum, nodes, row.depth + 1)
   endif
 
-  call self._buf.save()
+  if !modified
+    call self._buf.save()
+  endif
 endfunction
 
 function! s:Filer._close_tree(dir_node, dir_row) abort
