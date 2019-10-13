@@ -1,9 +1,9 @@
 let s:Filer = {}
 
-function! viler#Filer#new(buf, node_accessor, diff_checker) abort
+function! viler#Filer#new(buf, node_accessor, diff_maker) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
-  let filer._diff_checker = a:diff_checker
+  let filer._diff_maker = a:diff_maker
   let filer._nodes = a:node_accessor
   return filer
 endfunction
@@ -176,5 +176,5 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
 endfunction
 
 function! s:Filer.gather_changes() abort
-  return self._diff_checker.gather_changes(self._buf)
+  return self._diff_maker.gen_diff(self._buf)
 endfunction

@@ -4,18 +4,27 @@ let s:App = {}
 
 function! viler#App#create(work_dir) abort
   let node_store = viler#NodeStore#new()
-  let diff_checker = viler#DiffChecker#new(node_store)
+  let diff_id_gen = viler#IdGen#new()
+  let diff_maker = viler#applier#DiffMaker#new(node_store, diff_id_gen)
   let arbitrator = viler#Arbitrator#new()
-  return viler#App#new(a:work_dir, node_store, diff_checker, arbitrator)
+
+  return viler#App#new(
+    \   a:work_dir,
+    \   node_store,
+    \   diff_maker,
+    \   diff_id_gen,
+    \   arbitrator,
+    \ )
 endfunction
 
-function! viler#App#new(work_dir, node_store, diff_checker, arbitrator) abort
+function! viler#App#new(work_dir, node_store, diff_maker, diff_id_gen, arbitrator) abort
   let viler = deepcopy(s:App)
   let viler._filer_id = 0
   let viler._filers = {}
   let viler._work_dir = a:work_dir
   let viler._node_store = a:node_store
-  let viler._diff_checker = a:diff_checker
+  let viler._diff_maker = a:diff_maker
+  let viler._diff_id_gen = a:diff_id_gen
   let viler._arbitrator = a:arbitrator
   return viler
 endfunction
@@ -35,7 +44,7 @@ function! s:App.create_filer(dir) abort
   let filer = viler#Filer#new(
     \   buffer,
     \   node_accessor,
-    \   self._diff_checker,
+    \   self._diff_maker,
     \ )
   let self._filers[bufnr] = filer
 
@@ -60,6 +69,7 @@ function! s:App.filer_for(bufnr) abort
 endfunction
 
 function! s:App.apply_changes() abort
+  call self._diff_id_gen.reset()
   let diffs = []
   for bufnr in keys(self._filers)
     let filer = self._filers[bufnr]
@@ -67,27 +77,21 @@ function! s:App.apply_changes() abort
     call add(diffs, diff)
   endfor
 
-  " TODO: Consider changes of all filers.
-  let ops = self._arbitrator.decide_operations(diffs[0])
+  " XXX: For debug.
+  let g:_diff = diffs[0]
 
-  " TODO: Just do reconciliation without the confirmation.
-  " Instead of that, store deleted files in somewhere to
-  " allow users to restore them later if needed.
-  " FIXME: We don't want to show 'Press ENTER to continue' after the confirmation.
-  if len(ops.delete) > 0
-    " Should show all files inside it if a non-empty directory will be deleted.
-    let filenames = join(ops.delete, ', ')
-    let answer = confirm('Are you sure to delete ' . filenames, "yes\nno")
-    if answer != 1
-      throw 'Cancelled to save'
-    endif
-  endif
+  let planner = viler#applier#Planner#new()
 
-  let reconciler_work_dir = self._work_dir . '/mv_tmp'
+  " TODO: Handle changes of all filers.
+  call planner.make_plan(diffs[0])
+
+  let reconciler_work_dir = self._work_dir . '/work'
   if !isdirectory(reconciler_work_dir)
     call mkdir(reconciler_work_dir)
   endif
 
-  let reconciler = viler#Reconciler#new(reconciler_work_dir)
-  call reconciler.apply(ops)
+  " TODO: Enable to restore deleted files.
+  " TODO: Apply the plan.
+  " let reconciler = viler#applier#Reconciler#new(reconciler_work_dir)
+  " call reconciler.apply(plan)
 endfunction
