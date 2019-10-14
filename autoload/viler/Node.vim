@@ -10,9 +10,6 @@ function! viler#Node#new(id, abs_path) abort
   let node.id = a:id
 
   let node.dir = fnamemodify(a:abs_path, ':h')
-  if node.dir == '/'
-    let node.dir = ''
-  endif
 
   let node.name = fnamemodify(a:abs_path, ':t')
   let node.is_dir = isdirectory(a:abs_path)
@@ -20,5 +17,9 @@ function! viler#Node#new(id, abs_path) abort
 endfunction
 
 function! s:Node.abs_path() abort
-  return self.dir . '/' . self.name
+  if self.dir == '/'
+    return '/' . self.name
+  else
+    return self.dir . '/' . self.name
+  endif
 endfunction

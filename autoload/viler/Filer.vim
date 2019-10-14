@@ -154,10 +154,16 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
       continue
     endif
 
+    " TODO: Consider wrong indentations.
+
     if prev_depth < row.depth
       let dir_path .= '/' . prev_name
     elseif prev_depth > row.depth
-      let dir_path = fnamemodify(dir_path, ':h')
+      let idt = row.depth
+      while idt < prev_depth
+        let dir_path = fnamemodify(dir_path, ':h')
+        let idt += 1
+      endwhile
     endif
 
     let file_path = dir_path . '/' . row.name

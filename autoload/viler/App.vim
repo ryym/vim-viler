@@ -5,7 +5,7 @@ let s:App = {}
 function! viler#App#create(work_dir) abort
   let node_store = viler#NodeStore#new()
   let diff_id_gen = viler#IdGen#new()
-  let diff_maker = viler#applier#DiffMaker#new(node_store, diff_id_gen)
+  let diff_maker = viler#diff_tree#Maker#new(node_store, diff_id_gen)
   let arbitrator = viler#Arbitrator#new()
 
   return viler#App#new(
@@ -80,18 +80,20 @@ function! s:App.apply_changes() abort
   " XXX: For debug.
   let g:_diff = diffs[0]
 
-  let planner = viler#applier#Planner#new()
+  " let work_dir = self._work_dir . '/work'
+  let work_dir = '/Users/ryu/ghq/github.com/ryym/vim-viler/_work'
+  if !isdirectory(work_dir)
+    call mkdir(work_dir)
+  endif
+
+  let planner = viler#applier#Planner#new(self._diff_id_gen, work_dir)
 
   " TODO: Handle changes of all filers.
-  call planner.make_plan(diffs[0])
-
-  let reconciler_work_dir = self._work_dir . '/work'
-  if !isdirectory(reconciler_work_dir)
-    call mkdir(reconciler_work_dir)
-  endif
+  let g:_plan = planner.make_plan(diffs[0])
 
   " TODO: Enable to restore deleted files.
   " TODO: Apply the plan.
-  " let reconciler = viler#applier#Reconciler#new(reconciler_work_dir)
-  " call reconciler.apply(plan)
+  let fs = viler#applier#Fs#new()
+  let reconciler = viler#applier#Reconciler#new(g:_plan, fs)
+  call reconciler.apply_changes()
 endfunction

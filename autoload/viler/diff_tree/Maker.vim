@@ -1,15 +1,15 @@
-let s:DiffMaker = {}
+let s:DiffTreeMaker = {}
 
-function! viler#applier#DiffMaker#new(node_store, id_gen) abort
-  let maker = deepcopy(s:DiffMaker)
+function! viler#diff_tree#Maker#new(node_store, id_gen) abort
+  let maker = deepcopy(s:DiffTreeMaker)
   let maker._node_store = a:node_store
   let maker._dir_id_gen = a:id_gen
   return maker
 endfunction
 
-function! s:DiffMaker.gen_diff(buf) abort
+function! s:DiffTreeMaker.gen_diff(buf) abort
   let dir_path = a:buf.current_dir().path
-  let diff = viler#applier#Diff#new(self._dir_id_gen)
+  let diff = viler#diff_tree#DiffTree#new(self._dir_id_gen)
   let root = diff.register_dirs_from_path(dir_path)
   let dir = {
     \   'lnum': 1,
@@ -22,7 +22,7 @@ function! s:DiffMaker.gen_diff(buf) abort
   return diff
 endfunction
 
-function! s:DiffMaker._gather_changes(buf, dir, diff) abort
+function! s:DiffTreeMaker._gather_changes(buf, dir, diff) abort
   let l = a:dir.lnum
   let last_lnum = a:buf.lnum_last()
   let unchanged_files = {}
@@ -100,7 +100,8 @@ function! s:detect_deleted_files(dir, unchanged_files, diff) abort
   let real_files = readdir(path)
   for name in real_files
     if !has_key(a:unchanged_files, name)
-      call a:diff.deleted_file(a:dir.id, name)
+      let is_dir = isdirectory(path . '/' . name)
+      call a:diff.deleted_file(a:dir.id, name, {'is_dir': is_dir})
     endif
   endfor
 endfunction
@@ -109,8 +110,9 @@ function! s:next_dir_ctx(l, dir, row, diff) abort
   return {
     \   'lnum': a:l,
     \   'is_new': a:row.is_new,
-    \   'id': a:diff.get_or_make_dir(a:dir.id, a:row.name).id,
+    \   'id': a:diff.get_or_make_node(a:dir.id, a:row.name, 1).id,
     \   'path': a:dir.path . '/' . a:row.name,
     \   'depth': a:dir.depth + 1,
     \ }
 endfunction
+
