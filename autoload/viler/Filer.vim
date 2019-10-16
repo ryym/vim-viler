@@ -8,6 +8,14 @@ function! viler#Filer#new(buf, node_accessor, diff_maker) abort
   return filer
 endfunction
 
+function! s:Filer.on_buf_enter() abort
+  call self._buf.on_enter()
+endfunction
+
+function! s:Filer.on_buf_leave() abort
+  call self._buf.on_leave()
+endfunction
+
 function! s:Filer.display(dir) abort
   call self._nodes.clear()
 

@@ -1,8 +1,23 @@
-let s:Buffer = {'_nr': 0}
+let s:Buffer = {}
 
 function! viler#Buffer#new() abort
   let buffer = deepcopy(s:Buffer)
+  let buffer._nr = 0
+
+  " This stores the last lnum of the buffer during
+  " the buffer is not active (not a 'current buffer').
+  " I could not find a way to get the last lnum of non-current buffer.
+  let buffer._lnum_last = 0
+
   return buffer
+endfunction
+
+function! s:Buffer.on_enter() abort
+  let self._lnum_last = 0
+endfunction
+
+function! s:Buffer.on_leave() abort
+  let self._lnum_last = line('$')
 endfunction
 
 function! s:Buffer.open(path) abort
@@ -20,6 +35,9 @@ function! s:Buffer.lnum_first() abort
 endfunction
 
 function! s:Buffer.lnum_last() abort
+  if self._lnum_last > 0
+    return self._lnum_last
+  endif
   return line('$')
 endfunction
 
@@ -41,7 +59,7 @@ endfunction
 
 function! s:Buffer.node_lnum(node_id) abort
   let l = 1 " Skip the first line which contains buffer metadata.
-  while l < line('$')
+  while l < self.lnum_last()
     let l += 1
     let row = self.node_row(l)
     if row.node_id == a:node_id

@@ -3,6 +3,8 @@ function! viler#enable() abort
     autocmd!
     autocmd BufNewFile,BufRead *.viler setfiletype viler
     autocmd BufWritePre *.viler call viler#apply_changes()
+    autocmd BufEnter *.viler call viler#on_buf_enter()
+    autocmd BufLeave *.viler call viler#on_buf_leave()
   augroup END
 
   let work_dir = tempname()
@@ -42,6 +44,18 @@ function! s:current_filer() abort
     throw '[viler] This buffer is not a file explorer'
   endif
   return filer
+endfunction
+
+function! viler#on_buf_enter() abort
+  let filer = s:app.filer_for(bufnr('%'))
+  if type(filer) == v:t_number
+    return
+  endif
+  call filer.on_buf_enter()
+endfunction
+
+function! viler#on_buf_leave() abort
+  call s:current_filer().on_buf_leave()
 endfunction
 
 function! viler#go_down_cursor_dir() abort
