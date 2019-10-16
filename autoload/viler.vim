@@ -27,7 +27,7 @@ function! viler#open() abort
   " XXX: Temporary.
   Map n (buffer silent nowait) <C-l> ::call viler#go_down_cursor_dir()
   Map n (buffer silent nowait) <C-h> ::call viler#go_up_dir()
-  Map n (buffer silent nowait) K ::call viler#toggle_tree()
+  Map n (buffer silent nowait) <C-j> ::call viler#toggle_tree()
   Map n (buffer silent nowait) u ::call viler#undo()
   Map n (buffer silent nowait) <C-r> ::call viler#redo()
 endfunction
