@@ -85,7 +85,7 @@ function! s:App.apply_changes() abort
 
   " XXX: For debug.
   let g:_tree = tree._nodes
-  let g:_diff = {'dirops': final_diff.dirops, 'copies': final_diff.copies}
+  let g:_diff = {'dirops': final_diff.dirops, 'moves': final_diff.moves}
 
   let work_dir = {
     \   'path': '/Users/ryu/ghq/github.com/ryym/vim-viler/_work',

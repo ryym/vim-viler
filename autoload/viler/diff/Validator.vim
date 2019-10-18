@@ -9,9 +9,9 @@ function! viler#diff#Validator#new(tree) abort
   return validator
 endfunction
 
-function! s:Validator.validate_copies(copies) abort
+function! s:Validator.validate_copies(moves) abort
   let errs = {}
-  let dup_dests = self._find_duplicate_dests(a:copies)
+  let dup_dests = self._find_duplicate_dests(a:moves)
   for dd in dup_dests
     let dest = self._tree.get_node(dd.dest_id)
     let dest_path = self._tree.path(dest)
@@ -21,15 +21,15 @@ function! s:Validator.validate_copies(copies) abort
   return errs
 endfunction
 
-function! s:Validator._find_duplicate_dests(copies) abort
+function! s:Validator._find_duplicate_dests(moves) abort
   let dups = []
   let dest2srcs = {}
-  for copy in values(a:copies)
-    let srcs = get(dest2srcs, copy.dest_id, [])
-    call add(srcs, copy.src_id)
-    let dest2srcs[copy.dest_id] = srcs
+  for move in values(a:moves)
+    let srcs = get(dest2srcs, move.dest_id, [])
+    call add(srcs, move.src_id)
+    let dest2srcs[move.dest_id] = srcs
     if len(srcs) == 2
-      call add(dups, copy.dest_id)
+      call add(dups, move.dest_id)
     endif
   endfor
   return dups->map({_, d -> {'dest_id': d, 'src_ids': dest2srcs[d]}})
@@ -62,8 +62,8 @@ function! s:Validator._validate_dirop(diff, path, op, errs) abort
     let files[name] = {'name': name, 'is_dir': is_dir, 'is_new': 0}
   endfor
 
-  for copy_id in a:op.move_away
-    let move = a:diff.copies[copy_id]
+  for move_id in a:op.move_away
+    let move = a:diff.moves[move_id]
     let name = self._tree.get_node(move.src_id).name
     call remove(files, name)
   endfor
@@ -74,9 +74,9 @@ function! s:Validator._validate_dirop(diff, path, op, errs) abort
   endfor
 
   let added_files = copy(a:op.add)->map('self._tree.get_node(v:val)')
-  for copy_id in a:op.copy_from
-    let copy = a:diff.copies[copy_id]
-    let node = self._tree.get_node(copy.dest_id)
+  for move_id in a:op.copy_from
+    let move = a:diff.moves[move_id]
+    let node = self._tree.get_node(move.dest_id)
     call add(added_files, node)
   endfor
 

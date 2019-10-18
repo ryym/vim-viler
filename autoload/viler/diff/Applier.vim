@@ -35,12 +35,12 @@ function! s:Applier._apply_changes(dir_id) abort
       call self._delete_file(node_id)
     endfor
 
-    for copy_id in op.move_away
-      call self._move_file_away(dir, copy_id)
+    for move_id in op.move_away
+      call self._move_file_away(dir, move_id)
     endfor
 
-    for copy_id in op.copy_from
-      call self._copy_file_to(dir, copy_id)
+    for move_id in op.copy_from
+      call self._copy_file_to(dir, move_id)
     endfor
 
     for node_id in op.add
@@ -53,8 +53,8 @@ function! s:Applier._apply_changes(dir_id) abort
   endfor
 endfunction
 
-function! s:Applier._copy_entry(copy_id) abort
-  return self._diff.copies[a:copy_id]
+function! s:Applier._move_entry(move_id) abort
+  return self._diff.moves[a:move_id]
 endfunction
 
 function! s:Applier._new_work_file() abort
@@ -80,13 +80,13 @@ function! s:Applier._delete_file(node_id) abort
   call self._tree.remove_node(node.id)
 endfunction
 
-function! s:Applier._move_file_away(src_parent, copy_id) abort
-  let copy = self._copy_entry(a:copy_id)
-  if copy.done
+function! s:Applier._move_file_away(src_parent, move_id) abort
+  let move = self._move_entry(a:move_id)
+  if move.done
     return
   endif
 
-  let src_node = self._tree.get_node(copy.src_id)
+  let src_node = self._tree.get_node(move.src_id)
   let work_file = self._new_work_file()
 
   let src_path = self._tree.path(src_node)
@@ -95,17 +95,19 @@ function! s:Applier._move_file_away(src_parent, copy_id) abort
   call self._tree.move_node(src_node.id, work_file.dir_id, work_file.name)
 endfunction
 
-function! s:Applier._copy_file_to(dest_parent, copy_id) abort
-  let copy = self._copy_entry(a:copy_id)
+function! s:Applier._copy_file_to(dest_parent, move_id) abort
+  let move = self._move_entry(a:move_id)
 
-  let src_node = self._tree.get_node(copy.src_id)
+  let src_node = self._tree.get_node(move.src_id)
   let src_parent = self._tree.get_node(src_node.parent)
 
   let src_path = self._tree.path(src_node)
-  let dest_node = self._tree.get_node(copy.dest_id)
+  let dest_node = self._tree.get_node(move.dest_id)
   let dest_path = self._tree.path(dest_node)
 
-  if copy.is_move
+  if move.is_copy
+    call self._fs.copy_file(src_path, dest_path)
+  else
     call self._fs.move_file(src_path, dest_path)
 
     " The dest node may not be exist if it was an existing file and
@@ -114,16 +116,14 @@ function! s:Applier._copy_file_to(dest_parent, copy_id) abort
       " If it exists, it is a new file created at this time.
       " In that case it must be safe to remove the dest node because:
       " - the file corresponding to the dest node does not exist yet
-      "   so it cannot be a src of another copy entry.
-      " - duplicate dest is invalid so it cannot be a dest of another copy entry.
+      "   so it cannot be a src of another move entry.
+      " - duplicate dest is invalid so it cannot be a dest of another move entry.
       call self._tree.remove_node(dest_node.id)
     endif
     call self._tree.move_node(src_node.id, dest_node.parent, dest_node.name)
-  else
-    call self._fs.copy_file(src_path, dest_path)
   endif
 
-  let copy.done = 1
+  let move.done = 1
 endfunction
 
 function! s:Applier._add_file(node_id) abort

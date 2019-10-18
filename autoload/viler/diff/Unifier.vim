@@ -11,7 +11,7 @@ endfunction
 function! s:Unifier.unify_diffs(diffs) abort
   let diff = self._merge_diffs(a:diffs)
 
-  let errs = self._validator.validate_copies(diff.copies)
+  let errs = self._validator.validate_copies(diff.moves)
   if len(errs) > 0
     return { 'error': errs }
   endif
@@ -39,18 +39,18 @@ endfunction
 
 function! s:Unifier._detect_moves(diff) abort
   let moves = []
-  for copy in values(a:diff.copies)
-    if !has_key(a:diff.deletions, copy.src_id)
+  for move in values(a:diff.moves)
+    if !has_key(a:diff.deletions, move.src_id)
+      let move.is_copy = 1
       continue
     endif
-    let src = self._tree.get_node(copy.src_id)
+    let src = self._tree.get_node(move.src_id)
     let src_parent = self._tree.get_node(src.parent)
     let op = a:diff.dirop(src_parent.id)
-    call add(op.move_away, copy.id)
-    call remove(op.delete, copy.src_id)
-    call remove(a:diff.deletions, copy.src_id)
-    let copy.is_move = 1
-    call add(moves, copy)
+    call add(op.move_away, move.id)
+    call remove(op.delete, move.src_id)
+    call remove(a:diff.deletions, move.src_id)
+    call add(moves, move)
   endfor
   return moves
 endfunction

@@ -68,7 +68,7 @@ function! s:Maker._gather_changes(buf, dir, diff) abort
       continue
     endif
 
-    call a:diff.copied_file(a:dir.id, row.name, {
+    call a:diff.moved_file(a:dir.id, row.name, {
       \   'abs_path': src_path,
       \   'name': node.name,
       \   'is_dir': node.is_dir,

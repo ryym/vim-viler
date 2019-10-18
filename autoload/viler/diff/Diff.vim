@@ -3,9 +3,9 @@ let s:Diff = {}
 function! viler#diff#Diff#new(tree, id_gen) abort
   let diff = deepcopy(s:Diff)
   let diff._tree = a:tree
-  let diff._copy_id = a:id_gen
+  let diff._move_id = a:id_gen
   let diff.dirops = {}
-  let diff.copies = {}
+  let diff.moves = {}
   let diff.deletions = {}
   return diff
 endfunction
@@ -37,7 +37,7 @@ function! s:Diff.new_file(parent_id, name, stat) abort
   call add(op.add, file.id)
 endfunction
 
-function! s:Diff.copied_file(parent_id, name, src) abort
+function! s:Diff.moved_file(parent_id, name, src) abort
   let path = a:src.abs_path
   let src_parent_path = fnamemodify(path, ':h')
   let src_parent_dir = self.register_dirs_from_path(src_parent_path)
@@ -45,18 +45,18 @@ function! s:Diff.copied_file(parent_id, name, src) abort
   let src_node = self.get_or_make_node(src_parent_dir.id, a:src.name, a:src.is_dir)
   let dest_node = self.get_or_make_node(a:parent_id, a:name, a:src.is_dir)
 
-  let copy_id = self._copy_id.make_id()
-  let copy_entry = {
-    \   'id': copy_id,
+  let move_id = self._move_id.make_id()
+  let move_entry = {
+    \   'id': move_id,
     \   'src_id': src_node.id,
     \   'dest_id': dest_node.id,
-    \   'is_move': 0,
+    \   'is_copy': 0,
     \   'done': 0,
     \ }
-  let self.copies[copy_id] = copy_entry
+  let self.moves[move_id] = move_entry
 
   let dest_parent_op = self._get_or_make_op(a:parent_id)
-  call add(dest_parent_op.copy_from, copy_id)
+  call add(dest_parent_op.copy_from, move_id)
 endfunction
 
 function! s:Diff.deleted_file(parent_id, name, stat) abort
@@ -92,7 +92,7 @@ function! s:Diff.merge(other) abort
     let my_op = self._get_or_make_op(op.dir_id)
     call s:merge_ops(my_op, op)
   endfor
-  call s:merge_dict(self.copies, a:other.copies)
+  call s:merge_dict(self.moves, a:other.moves)
   call s:merge_dict(self.deletions, a:other.deletions)
 endfunction
 
