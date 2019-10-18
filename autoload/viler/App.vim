@@ -91,9 +91,7 @@ function! s:App.apply_changes() abort
   " TODO: Handle changes of all filers.
   let g:_plan = planner.make_plan(diffs[0])
 
-  " TODO: Enable to restore deleted files.
-  " TODO: Apply the plan.
-  let fs = viler#applier#Fs#new()
-  let reconciler = viler#applier#Reconciler#new(g:_plan, fs)
-  call reconciler.apply_changes()
+  let fs = viler#Fs#new()
+  let applier = viler#diff#Applier#new(tree, final_diff, fs, work_dir)
+  call applier.apply_changes()
 endfunction

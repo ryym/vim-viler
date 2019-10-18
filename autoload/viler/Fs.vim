@@ -1,6 +1,6 @@
 let s:Fs = {}
 
-function! viler#applier#Fs#new() abort
+function! viler#Fs#new() abort
   let fs = deepcopy(s:Fs)
   return fs
 endfunction
