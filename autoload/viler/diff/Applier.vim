@@ -35,12 +35,12 @@ function! s:Applier._apply_changes(dir_id) abort
       call self._delete_file(node_id)
     endfor
 
-    for move_id in op.move_away
+    for move_id in op.move_to
       call self._move_file_away(dir, move_id)
     endfor
 
-    for move_id in op.copy_from
-      call self._copy_file_to(dir, move_id)
+    for move_id in op.move_from
+      call self._move_file_to(dir, move_id)
     endfor
 
     for node_id in op.add
@@ -87,15 +87,21 @@ function! s:Applier._move_file_away(src_parent, move_id) abort
   endif
 
   let src_node = self._tree.get_node(move.src_id)
+  let src_path = self._tree.path(src_node)
   let work_file = self._new_work_file()
 
-  let src_path = self._tree.path(src_node)
-  call self._fs.move_file(src_path, work_file.path)
-
-  call self._tree.move_node(src_node.id, work_file.dir_id, work_file.name)
+  if move.is_copy
+    call self._fs.copy_file(src_path, work_file.path)
+    let copied_src = self._tree.make_node(work_file.dir_id, work_file.name, src_node.is_dir)
+    let move.src_id = copied_src.id
+    let move.done = 1
+  else
+    call self._fs.move_file(src_path, work_file.path)
+    call self._tree.move_node(src_node.id, work_file.dir_id, work_file.name)
+  endif
 endfunction
 
-function! s:Applier._copy_file_to(dest_parent, move_id) abort
+function! s:Applier._move_file_to(dest_parent, move_id) abort
   let move = self._move_entry(a:move_id)
 
   let src_node = self._tree.get_node(move.src_id)
@@ -106,7 +112,11 @@ function! s:Applier._copy_file_to(dest_parent, move_id) abort
   let dest_path = self._tree.path(dest_node)
 
   if move.is_copy
-    call self._fs.copy_file(src_path, dest_path)
+    if move.done
+      call self._fs.move_file(src_path, dest_path)
+    else
+      call self._fs.copy_file(src_path, dest_path)
+    endif
   else
     call self._fs.move_file(src_path, dest_path)
 

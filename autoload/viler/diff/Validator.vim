@@ -57,15 +57,24 @@ endfunction
 
 function! s:Validator._validate_dirop(diff, path, op, errs) abort
   let files = {}
+
+  if isdirectory(a:path)
+    " Currently a:path could be non-existing one.
+    " (e.g. the destination path of file moving)
+    return
+  endif
+
   for name in readdir(a:path)
     let is_dir = isdirectory(a:path . '/' . name)
     let files[name] = {'name': name, 'is_dir': is_dir, 'is_new': 0}
   endfor
 
-  for move_id in a:op.move_away
+  for move_id in a:op.move_to
     let move = a:diff.moves[move_id]
-    let name = self._tree.get_node(move.src_id).name
-    call remove(files, name)
+    if !move.is_copy
+      let name = self._tree.get_node(move.src_id).name
+      call remove(files, name)
+    endif
   endfor
 
   for dl_id in keys(a:op.delete)
@@ -74,7 +83,7 @@ function! s:Validator._validate_dirop(diff, path, op, errs) abort
   endfor
 
   let added_files = copy(a:op.add)->map('self._tree.get_node(v:val)')
-  for move_id in a:op.copy_from
+  for move_id in a:op.move_from
     let move = a:diff.moves[move_id]
     let node = self._tree.get_node(move.dest_id)
     call add(added_files, node)

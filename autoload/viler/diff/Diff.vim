@@ -55,8 +55,11 @@ function! s:Diff.moved_file(parent_id, name, src) abort
     \ }
   let self.moves[move_id] = move_entry
 
+  let src_parent_op = self._get_or_make_op(src_parent_dir.id)
+  call add(src_parent_op.move_to, move_id)
+
   let dest_parent_op = self._get_or_make_op(a:parent_id)
-  call add(dest_parent_op.copy_from, move_id)
+  call add(dest_parent_op.move_from, move_id)
 endfunction
 
 function! s:Diff.deleted_file(parent_id, name, stat) abort
@@ -81,8 +84,8 @@ function! s:new_dirop(dir_id) abort
   return {
     \   'dir_id': a:dir_id,
     \   'add': [],
-    \   'copy_from': [],
-    \   'move_away': [],
+    \   'move_from': [],
+    \   'move_to': [],
     \   'delete': {},
     \  }
 endfunction
@@ -118,8 +121,8 @@ endfunction
 
 function! s:merge_ops(op1, op2) abort
   call s:append_list(a:op1.add, a:op2.add)
-  call s:append_list(a:op1.copy_from, a:op2.copy_from)
-  call s:append_list(a:op1.move_away, a:op2.move_away)
+  call s:append_list(a:op1.move_from, a:op2.move_from)
+  call s:append_list(a:op1.move_to, a:op2.move_to)
   call s:merge_dict(a:op1.delete, a:op2.delete)
 endfunction
 

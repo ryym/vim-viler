@@ -11,6 +11,8 @@ endfunction
 function! s:Unifier.unify_diffs(diffs) abort
   let diff = self._merge_diffs(a:diffs)
 
+  let g:_hoge = deepcopy(diff)
+
   let errs = self._validator.validate_copies(diff.moves)
   if len(errs) > 0
     return { 'error': errs }
@@ -47,7 +49,6 @@ function! s:Unifier._detect_moves(diff) abort
     let src = self._tree.get_node(move.src_id)
     let src_parent = self._tree.get_node(src.parent)
     let op = a:diff.dirop(src_parent.id)
-    call add(op.move_away, move.id)
     call remove(op.delete, move.src_id)
     call remove(a:diff.deletions, move.src_id)
     call add(moves, move)
