@@ -189,6 +189,6 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
   endif
 endfunction
 
-function! s:Filer.gather_changes() abort
-  return self._diff_maker.gen_diff(self._buf)
+function! s:Filer.gather_changes(diff) abort
+  return self._diff_maker.gather_changes(self._buf, a:diff)
 endfunction

@@ -4,28 +4,22 @@ let s:App = {}
 
 function! viler#App#create(work_dir) abort
   let node_store = viler#NodeStore#new()
-  let diff_id_gen = viler#IdGen#new()
-  let diff_maker = viler#diff_tree#Maker#new(node_store, diff_id_gen)
-  let arbitrator = viler#Arbitrator#new()
+  let diff_maker = viler#diff#Maker#new(node_store)
 
   return viler#App#new(
     \   a:work_dir,
     \   node_store,
     \   diff_maker,
-    \   diff_id_gen,
-    \   arbitrator,
     \ )
 endfunction
 
-function! viler#App#new(work_dir, node_store, diff_maker, diff_id_gen, arbitrator) abort
+function! viler#App#new(work_dir, node_store, diff_maker) abort
   let viler = deepcopy(s:App)
   let viler._filer_id = 0
   let viler._filers = {}
   let viler._work_dir = a:work_dir
   let viler._node_store = a:node_store
   let viler._diff_maker = a:diff_maker
-  let viler._diff_id_gen = a:diff_id_gen
-  let viler._arbitrator = a:arbitrator
   return viler
 endfunction
 
@@ -69,31 +63,36 @@ function! s:App.filer_for(bufnr) abort
 endfunction
 
 function! s:App.apply_changes() abort
-  call self._diff_id_gen.reset()
+  let tree = viler#diff#Tree#new()
+  let id_gen = viler#IdGen#new()
+
   let diffs = []
   for bufnr in keys(self._filers)
     let filer = self._filers[bufnr]
-    let diff = filer.gather_changes()
+    let diff = viler#diff#Diff#new(tree, id_gen)
+    call filer.gather_changes(diff)
     call add(diffs, diff)
   endfor
 
-  " XXX: For debug.
-  let g:_diff = diffs[0]
+  let validator = viler#diff#Validator#new(tree)
+  let unifier = viler#diff#Unifier#new(tree, id_gen, validator)
+  let result = unifier.unify_diffs(diffs)
 
-  " let work_dir = self._work_dir . '/work'
-  let work_dir = '/Users/ryu/ghq/github.com/ryym/vim-viler/_work'
-  if !isdirectory(work_dir)
-    call mkdir(work_dir)
+  if has_key(result, 'error')
+    throw '[viler] ' . string(result.error)
   endif
+  let final_diff = result.ok
 
-  let planner = viler#applier#Planner#new(self._diff_id_gen, work_dir)
+  " XXX: For debug.
+  let g:_tree = tree._nodes
+  let g:_diff = {'dirops': final_diff.dirops, 'copies': final_diff.copies}
 
-  " TODO: Handle changes of all filers.
-  let g:_plan = planner.make_plan(diffs[0])
+  let work_dir = {
+    \   'path': '/Users/ryu/ghq/github.com/ryym/vim-viler/_work',
+    \   'path_from_root': 'Users/ryu/ghq/github.com/ryym/vim-viler/_work',
+    \ }
 
-  " TODO: Enable to restore deleted files.
-  " TODO: Apply the plan.
   let fs = viler#applier#Fs#new()
-  let reconciler = viler#applier#Reconciler#new(g:_plan, fs)
-  call reconciler.apply_changes()
+  let applier = viler#diff#Applier#new(tree, final_diff, fs, work_dir)
+  call applier.apply_changes()
 endfunction
