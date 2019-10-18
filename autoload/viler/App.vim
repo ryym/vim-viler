@@ -92,7 +92,7 @@ function! s:App.apply_changes() abort
     \   'path_from_root': 'Users/ryu/ghq/github.com/ryym/vim-viler/_work',
     \ }
 
-  let fs = viler#applier#Fs#new()
+  let fs = viler#Fs#new()
   let applier = viler#diff#Applier#new(tree, final_diff, fs, work_dir)
   call applier.apply_changes()
 endfunction
