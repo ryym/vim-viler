@@ -106,7 +106,7 @@ function! s:Diff.unify_nodes_for_move(src_id, dest_id) abort
   endif
 
   let dest = self._tree.get_node(a:dest_id)
-  for child_id in values(dest.children)
+  for child_id in keys(dest.children)
     let child = self._tree.get_node(child_id)
     let child.parent = src.id
   endfor

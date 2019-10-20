@@ -35,17 +35,33 @@ endfunction
 
 function! s:Tree.get_or_make_node(parent_id, name, is_dir) abort
   let parent = self.get_dir(a:parent_id)
-  if has_key(parent.children, a:name)
-    return self.get_node(parent.children[a:name])
+  let child = self.get_child(parent, a:name)
+  if type(child) != v:t_number
+    return child
   endif
   let dir = self.make_node(a:parent_id, a:name, a:is_dir)
   return dir
 endfunction
 
+function! s:Tree.has_child(parent, child_name) abort
+  let child = self.get_child(a:parent, a:child_name)
+  return type(child) != v:t_number
+endfunction
+
+function! s:Tree.get_child(parent, child_name) abort
+  for child_id in keys(a:parent.children)
+    let child = self.get_node(child_id)
+    if child.name == a:child_name
+      return child
+    endif
+  endfor
+  return 0
+endfunction
+
 function! s:Tree.make_node(parent_id, name, is_dir) abort
   let id = self._new_id()
   let node = s:make_node(id, a:parent_id, a:name, a:is_dir)
-  let self._nodes[a:parent_id].children[node.name] = node.id
+  let self._nodes[a:parent_id].children[node.id] = 1
   let self._nodes[id] = node
   return node
 endfunction
@@ -71,12 +87,12 @@ function! s:Tree.register_dirs_from_path(path) abort
 
   while i < size
     let dir_name = dir_names[i]
-    " Skip already created directories.
-    if has_key(dir.children, dir_name)
-      let dir = self.get_dir(dir.children[dir_name])
-      let i += 1
-    else
+    let child = self.get_child(dir, dir_name)
+    if type(child) == v:t_number
       break
+    else
+      let dir = child
+      let i += 1
     endif
   endwhile
 
@@ -108,19 +124,19 @@ function! s:Tree.remove_node(node_id) abort
 
   let node = self.get_node(a:node_id)
   let parent = self.get_node(node.parent)
-  call remove(parent.children, node.name) 
+  call remove(parent.children, node.id) 
 
   return node
 endfunction
 
 function! s:Tree.move_node(node_id, new_parent_id, new_name) abort
   let parent = self.get_dir(a:new_parent_id)
-  if has_key(parent.children, a:new_name)
+  if self.has_child(parent, a:new_name)
     throw '[viler] Invalid node move: name ' . a:new_name . ' conflict in ' . parent.name
   endif
 
   let node = self.remove_node(a:node_id)
   let node.name = a:new_name
-  let parent.children[a:new_name] = node.id
+  let parent.children[node.id] = 1
   let node.parent = a:new_parent_id
 endfunction

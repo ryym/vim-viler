@@ -48,7 +48,7 @@ function! s:Applier._apply_changes(dir_id) abort
     endfor
   endif
 
-  for child_id in values(dir.children)
+  for child_id in keys(dir.children)
     call self._apply_changes(child_id)
   endfor
 endfunction
@@ -122,7 +122,7 @@ function! s:Applier._move_file_to(dest_parent, move_id) abort
 
     " The dest node may not be exist if it was an existing file and
     " was deleted or moved by another operation.
-    if has_key(a:dest_parent.children, dest_node.name)
+    if has_key(a:dest_parent.children, dest_node.id)
       " If it exists, it is a new file created at this time.
       " In that case it must be safe to remove the dest node because:
       " - the file corresponding to the dest node does not exist yet

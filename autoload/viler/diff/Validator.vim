@@ -47,7 +47,7 @@ function! s:Validator._validate_dir(diff, dir, path, errs) abort
   if type(op) != v:t_number
     call self._validate_dirop(a:diff, a:path, op, a:errs)
   endif
-  for child_id in values(a:dir.children)
+  for child_id in keys(a:dir.children)
     let child = self._tree.get_node(child_id)
     if child.is_dir
       call self._validate_dir(a:diff, child, a:path . '/' . child.name, a:errs)
