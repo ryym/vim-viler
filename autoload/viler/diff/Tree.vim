@@ -5,7 +5,7 @@ function! viler#diff#Tree#new() abort
   let tree._node_id = 0
   let tree._nodes = {}
 
-  let root = s:make_node(0, -1, '', 1)
+  let root = viler#diff#Node#new(0, -1, '', 1, 0)
   let tree._nodes[root.id] = root
   let tree._root_dir_id = 0
 
@@ -33,49 +33,31 @@ function! s:Tree.get_dir(id) abort
   return dir
 endfunction
 
-function! s:Tree.get_or_make_node(parent_id, name, is_dir) abort
+function! s:Tree.get_or_make_node(parent_id, name, is_dir, will) abort
   let parent = self.get_dir(a:parent_id)
-  let child = self.get_child(parent, a:name)
+  let child = self.get_child(parent, a:name, a:will)
   if type(child) != v:t_number
     return child
   endif
-  let dir = self.make_node(a:parent_id, a:name, a:is_dir)
+  let dir = self.make_node(a:parent_id, a:name, a:is_dir, a:will)
   return dir
 endfunction
 
-function! s:Tree.has_child(parent, child_name) abort
-  let child = self.get_child(a:parent, a:child_name)
-  return type(child) != v:t_number
-endfunction
-
-function! s:Tree.get_child(parent, child_name) abort
+function! s:Tree.get_child(parent, child_name, will) abort
   for child_id in keys(a:parent.children)
     let child = self.get_node(child_id)
-    if child.name == a:child_name
+    if child.name == a:child_name && child.will == a:will
       return child
     endif
   endfor
   return 0
 endfunction
 
-function! s:Tree.make_node(parent_id, name, is_dir) abort
+function! s:Tree.make_node(parent_id, name, is_dir, will) abort
   let id = self._new_id()
-  let node = s:make_node(id, a:parent_id, a:name, a:is_dir)
+  let node = viler#diff#Node#new(id, a:parent_id, a:name, a:is_dir, a:will)
   let self._nodes[a:parent_id].children[node.id] = 1
   let self._nodes[id] = node
-  return node
-endfunction
-
-function! s:make_node(id, parent_id, name, is_dir) abort
-  let node = {
-    \   'id': a:id,
-    \   'parent': a:parent_id,
-    \   'name': a:name,
-    \   'is_dir': a:is_dir,
-    \ }
-  if a:is_dir
-    let node.children = {}
-  endif
   return node
 endfunction
 
@@ -87,7 +69,7 @@ function! s:Tree.register_dirs_from_path(path) abort
 
   while i < size
     let dir_name = dir_names[i]
-    let child = self.get_child(dir, dir_name)
+    let child = self.get_child(dir, dir_name, g:viler#diff#Node#will.stay)
     if type(child) == v:t_number
       break
     else
@@ -98,7 +80,7 @@ function! s:Tree.register_dirs_from_path(path) abort
 
   " Create not registered directories.
   for dir_name in dir_names[i:]
-    let dir = self.make_node(dir.id, dir_name, 1)
+    let dir = self.make_node(dir.id, dir_name, 1, g:viler#diff#Node#will.stay)
   endfor
 
   return dir
@@ -131,10 +113,6 @@ endfunction
 
 function! s:Tree.move_node(node_id, new_parent_id, new_name) abort
   let parent = self.get_dir(a:new_parent_id)
-  if self.has_child(parent, a:new_name)
-    throw '[viler] Invalid node move: name ' . a:new_name . ' conflict in ' . parent.name
-  endif
-
   let node = self.remove_node(a:node_id)
   let node.name = a:new_name
   let parent.children[node.id] = 1

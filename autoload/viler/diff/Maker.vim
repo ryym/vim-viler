@@ -42,13 +42,9 @@ function! s:Maker._gather_changes(buf, dir, diff) abort
       endif
       call a:diff.new_file(a:dir.id, row.name, {'is_dir': row.is_dir})
 
-      " XXX: What about tree_open state?
+      " TODO: Handle nested new directory.
       " Probably we need to determine the directory is open or not by
       " an indentation of the next line.
-      if row.is_dir
-        let dir = s:next_dir_ctx(l, a:dir, row, a:diff)
-        let l = self._gather_changes(a:buf, dir, a:diff)
-      endif
       continue
     endif
 
@@ -62,19 +58,25 @@ function! s:Maker._gather_changes(buf, dir, diff) abort
     if src_path == row_path
       let unchanged_files[row.name] = 1
       if row.is_dir && row.state.tree_open
-        let dir = s:next_dir_ctx(l, a:dir, row, a:diff)
+        let node = a:diff.get_or_make_node(
+          \   a:dir.id,
+          \   row.name,
+          \   1,
+          \   g:viler#diff#Node#will.stay,
+          \ )
+        let dir = s:next_dir_ctx(l, a:dir, node, row, a:diff)
         let l = self._gather_changes(a:buf, dir, a:diff)
       endif
       continue
     endif
 
-    call a:diff.moved_file(a:dir.id, row.name, {
+    let node = a:diff.moved_file(a:dir.id, row.name, {
       \   'abs_path': src_path,
       \   'name': node.name,
       \   'is_dir': node.is_dir,
       \ })
     if row.is_dir && row.state.tree_open
-      let dir = s:next_dir_ctx(l, a:dir, row, a:diff)
+      let dir = s:next_dir_ctx(l, a:dir, node, row, a:diff)
       let dir.subroot = { 'src': src_path, 'dest': row_path }
       let l = self._gather_changes(a:buf, dir, a:diff)
     endif
@@ -102,12 +104,12 @@ function! s:detect_deleted_files(dir, unchanged_files, diff) abort
   endfor
 endfunction
 
-function! s:next_dir_ctx(l, dir, row, diff) abort
+function! s:next_dir_ctx(l, dir, node, row, diff) abort
   let next_dir = {
     \   'lnum': a:l,
     \   'is_new': a:row.is_new,
-    \   'id': a:diff.get_or_make_node(a:dir.id, a:row.name, 1).id,
-    \   'path': a:dir.path . '/' . a:row.name,
+    \   'id': a:node.id,
+    \   'path': a:dir.path . '/' . a:node.name,
     \   'depth': a:dir.depth + 1,
     \ }
   if has_key(a:dir, 'subroot')

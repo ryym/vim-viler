@@ -14,8 +14,8 @@ function! s:Diff.register_dirs_from_path(path) abort
   return self._tree.register_dirs_from_path(a:path)
 endfunction
 
-function! s:Diff.get_or_make_node(parent_id, name, is_dir) abort
-  return self._tree.get_or_make_node(a:parent_id, a:name, a:is_dir)
+function! s:Diff.get_or_make_node(parent_id, name, is_dir, will) abort
+  return self._tree.get_or_make_node(a:parent_id, a:name, a:is_dir, a:will)
 endfunction
 
 function! s:Diff.try_get_dirop(dir_id) abort
@@ -32,7 +32,7 @@ function! s:Diff.dirop(dir_id) abort
 endfunction
 
 function! s:Diff.new_file(parent_id, name, stat) abort
-  let file = self.get_or_make_node(a:parent_id, a:name, a:stat.is_dir)
+  let file = self.get_or_make_node(a:parent_id, a:name, a:stat.is_dir, g:viler#diff#Node#will.join)
   let op = self._get_or_make_op(a:parent_id)
   call add(op.add, file.id)
 endfunction
@@ -42,8 +42,19 @@ function! s:Diff.moved_file(parent_id, name, src) abort
   let src_parent_path = fnamemodify(path, ':h')
   let src_parent_dir = self.register_dirs_from_path(src_parent_path)
 
-  let src_node = self.get_or_make_node(src_parent_dir.id, a:src.name, a:src.is_dir)
-  let dest_node = self.get_or_make_node(a:parent_id, a:name, a:src.is_dir)
+  " Note that this may be a copy. In that case the 'will' becomes 'stay' instae of 'leave'.
+  let src_node = self.get_or_make_node(
+    \   src_parent_dir.id,
+    \   a:src.name,
+    \   a:src.is_dir,
+    \   g:viler#diff#Node#will.leave,
+    \ )
+  let dest_node = self.get_or_make_node(
+    \   a:parent_id,
+    \   a:name,
+    \   a:src.is_dir,
+    \   g:viler#diff#Node#will.join,
+    \ )
 
   let move_id = self._move_id.make_id()
   let move_entry = {
@@ -60,10 +71,12 @@ function! s:Diff.moved_file(parent_id, name, src) abort
 
   let dest_parent_op = self._get_or_make_op(a:parent_id)
   call add(dest_parent_op.move_from, move_id)
+
+  return dest_node
 endfunction
 
 function! s:Diff.deleted_file(parent_id, name, stat) abort
-  let file = self.get_or_make_node(a:parent_id, a:name, a:stat.is_dir)
+  let file = self.get_or_make_node(a:parent_id, a:name, a:stat.is_dir, g:viler#diff#Node#will.leave)
   let op = self._get_or_make_op(a:parent_id)
   let op.delete[file.id] = 1
   let self.deletions[file.id] = 1

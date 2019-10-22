@@ -42,11 +42,12 @@ endfunction
 function! s:Unifier._detect_moves(diff) abort
   let moves = []
   for move in values(a:diff.moves)
+    let src = self._tree.get_node(move.src_id)
     if !has_key(a:diff.deletions, move.src_id)
       let move.is_copy = 1
+      let src.will = g:viler#diff#Node#will.stay
       continue
     endif
-    let src = self._tree.get_node(move.src_id)
     let src_parent = self._tree.get_node(src.parent)
     let op = a:diff.dirop(src_parent.id)
     call remove(op.delete, move.src_id)

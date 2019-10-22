@@ -16,7 +16,12 @@ function! s:Applier.apply_changes() abort
 
   " Prepare the working directory.
   call self._fs.make_dir(self._work_dir.path)
-  let node = self._tree.make_node(root.id, self._work_dir.path_from_root, 1)
+  let node = self._tree.make_node(
+    \   root.id,
+    \   self._work_dir.path_from_root,
+    \   1,
+    \   g:viler#diff#Node#will.stay,
+    \ )
   let self._work_dir_node_id = node.id
 
   call self._apply_changes(root.id)
@@ -92,7 +97,12 @@ function! s:Applier._move_file_away(src_parent, move_id) abort
 
   if move.is_copy
     call self._fs.copy_file(src_path, work_file.path)
-    let copied_src = self._tree.make_node(work_file.dir_id, work_file.name, src_node.is_dir)
+    let copied_src = self._tree.make_node(
+      \   work_file.dir_id,
+      \   work_file.name,
+      \   src_node.is_dir,
+      \   src_node.will,
+      \ )
     let move.src_id = copied_src.id
     let move.done = 1
   else
