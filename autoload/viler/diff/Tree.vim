@@ -69,7 +69,18 @@ function! s:Tree.register_dirs_from_path(path) abort
 
   while i < size
     let dir_name = dir_names[i]
-    let child = self.get_child(dir, dir_name, g:viler#diff#Node#will.stay)
+
+    " XXX: We assume that the duplicate path does not exist here (unless the tree is invalid).
+    " -> swap でダメ。。。
+    let child = 0
+    for child_id in keys(dir.children)
+      let c = self.get_node(child_id)
+      if c.name == dir_name
+        let child = c
+        break
+      endif
+    endfor
+
     if type(child) == v:t_number
       break
     else

@@ -74,25 +74,27 @@ function! s:App.apply_changes() abort
     call add(diffs, diff)
   endfor
 
-  let validator = viler#diff#Validator#new(tree)
-  let unifier = viler#diff#Unifier#new(tree, id_gen, validator)
-  let result = unifier.unify_diffs(diffs)
+  let g:_tree = diffs[0]._tree._nodes
 
-  if has_key(result, 'error')
-    throw '[viler] ' . string(result.error)
-  endif
-  let final_diff = result.ok
+"   let validator = viler#diff#Validator#new(tree)
+"   let unifier = viler#diff#Unifier#new(tree, id_gen, validator)
+"   let result = unifier.unify_diffs(diffs)
 
-  " XXX: For debug.
-  let g:_tree = tree._nodes
-  let g:_diff = {'dirops': final_diff.dirops, 'moves': final_diff.moves}
+"   if has_key(result, 'error')
+"     throw '[viler] ' . string(result.error)
+"   endif
+"   let final_diff = result.ok
 
-  let work_dir = {
-    \   'path': '/Users/ryu/ghq/github.com/ryym/vim-viler/_work',
-    \   'path_from_root': 'Users/ryu/ghq/github.com/ryym/vim-viler/_work',
-    \ }
+"   " XXX: For debug.
+"   let g:_tree = tree._nodes
+"   let g:_diff = {'dirops': final_diff.dirops, 'moves': final_diff.moves}
 
-  let fs = viler#Fs#new()
-  let applier = viler#diff#Applier#new(tree, final_diff, fs, work_dir)
-  call applier.apply_changes()
+"   let work_dir = {
+"     \   'path': '/Users/ryu/ghq/github.com/ryym/vim-viler/_work',
+"     \   'path_from_root': 'Users/ryu/ghq/github.com/ryym/vim-viler/_work',
+"     \ }
+
+"   let fs = viler#Fs#new()
+"   let applier = viler#diff#Applier#new(tree, final_diff, fs, work_dir)
+"   call applier.apply_changes()
 endfunction

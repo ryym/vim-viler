@@ -24,6 +24,21 @@ function! s:Applier.apply_changes() abort
     \ )
   let self._work_dir_node_id = node.id
 
+  " Run copies and moves first to avoid editing the content of the src directory
+  " before copying it. The editing must not be applied to the dest directory.
+  for move in values(self._diff.moves)
+    let src_node = self._tree.get_node(move.src_id)
+    let src_path = self._tree.path(src_node)
+    let work_file = self._new_work_file()
+
+    if move.is_copy
+      call self._fs.copy_file(src_path, work_file.path)
+    else
+      call self._fs.move_file(src_path, work_file.path)
+      call self._tree.move_node(src_node.id, work_file.dir_id, work_file.name)
+    endif
+  endfor
+
   call self._apply_changes(root.id)
 endfunction
 
@@ -40,9 +55,9 @@ function! s:Applier._apply_changes(dir_id) abort
       call self._delete_file(node_id)
     endfor
 
-    for move_id in op.move_to
-      call self._move_file_away(dir, move_id)
-    endfor
+    " for move_id in op.move_to
+    "   call self._move_file_away(dir, move_id)
+    " endfor
 
     for move_id in op.move_from
       call self._move_file_to(dir, move_id)
@@ -121,27 +136,34 @@ function! s:Applier._move_file_to(dest_parent, move_id) abort
   let dest_node = self._tree.get_node(move.dest_id)
   let dest_path = self._tree.path(dest_node)
 
-  if move.is_copy
-    if move.done
-      call self._fs.move_file(src_path, dest_path)
-    else
-      call self._fs.copy_file(src_path, dest_path)
-    endif
-  else
-    call self._fs.move_file(src_path, dest_path)
+  call self._fs.move_file(src_path, dest_path)
 
-    " The dest node may not be exist if it was an existing file and
-    " was deleted or moved by another operation.
-    if has_key(a:dest_parent.children, dest_node.id)
-      " If it exists, it is a new file created at this time.
-      " In that case it must be safe to remove the dest node because:
-      " - the file corresponding to the dest node does not exist yet
-      "   so it cannot be a src of another move entry.
-      " - duplicate dest is invalid so it cannot be a dest of another move entry.
-      call self._tree.remove_node(dest_node.id)
-    endif
+  if !move.is_copy
+    call self._tree.remove_node(dest_node.id)
     call self._tree.move_node(src_node.id, dest_node.parent, dest_node.name)
   endif
+
+  " if move.is_copy
+  "   if move.done
+  "     call self._fs.move_file(src_path, dest_path)
+  "   else
+  "     call self._fs.copy_file(src_path, dest_path)
+  "   endif
+  " else
+  "   call self._fs.move_file(src_path, dest_path)
+
+  "   " The dest node may not be exist if it was an existing file and
+  "   " was deleted or moved by another operation.
+  "   if has_key(a:dest_parent.children, dest_node.id)
+  "     " If it exists, it is a new file created at this time.
+  "     " In that case it must be safe to remove the dest node because:
+  "     " - the file corresponding to the dest node does not exist yet
+  "     "   so it cannot be a src of another move entry.
+  "     " - duplicate dest is invalid so it cannot be a dest of another move entry.
+  "     call self._tree.remove_node(dest_node.id)
+  "   endif
+  "   call self._tree.move_node(src_node.id, dest_node.parent, dest_node.name)
+  " endif
 
   let move.done = 1
 endfunction
