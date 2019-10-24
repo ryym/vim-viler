@@ -112,7 +112,7 @@ function! s:Buffer.update_node_row(node, row, state_changes) abort
 endfunction
 
 function! s:Buffer.modified() abort
-  return &modified
+  return getbufvar(self._nr, '&modified')
 endfunction
 
 function! s:Buffer.undo() abort
