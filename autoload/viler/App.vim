@@ -4,28 +4,19 @@ let s:App = {}
 
 function! viler#App#create(work_dir) abort
   let node_store = viler#NodeStore#new()
-  let diff_id_gen = viler#IdGen#new()
-  let diff_maker = viler#diff_tree#Maker#new(node_store, diff_id_gen)
-  let arbitrator = viler#Arbitrator#new()
 
   return viler#App#new(
     \   a:work_dir,
     \   node_store,
-    \   diff_maker,
-    \   diff_id_gen,
-    \   arbitrator,
     \ )
 endfunction
 
-function! viler#App#new(work_dir, node_store, diff_maker, diff_id_gen, arbitrator) abort
+function! viler#App#new(work_dir, node_store) abort
   let viler = deepcopy(s:App)
   let viler._filer_id = 0
   let viler._filers = {}
   let viler._work_dir = a:work_dir
   let viler._node_store = a:node_store
-  let viler._diff_maker = a:diff_maker
-  let viler._diff_id_gen = a:diff_id_gen
-  let viler._arbitrator = a:arbitrator
   return viler
 endfunction
 
@@ -44,7 +35,6 @@ function! s:App.create_filer(dir) abort
   let filer = viler#Filer#new(
     \   buffer,
     \   node_accessor,
-    \   self._diff_maker,
     \ )
   let self._filers[bufnr] = filer
 
@@ -69,29 +59,15 @@ function! s:App.filer_for(bufnr) abort
 endfunction
 
 function! s:App.apply_changes() abort
-  call self._diff_id_gen.reset()
-  let diffs = []
-  for bufnr in keys(self._filers)
-    let filer = self._filers[bufnr]
-    let diff = filer.gather_changes()
-    call add(diffs, diff)
-  endfor
+  let id_gen = viler#IdGen#new()
 
-  " XXX: For debug.
-  let g:_diff = diffs[0]
-
-  " let work_dir = self._work_dir . '/work'
-  let work_dir = '/Users/ryu/ghq/github.com/ryym/vim-viler/_work'
+  let work_dir = $HOME . '/.viler/apply'
   if !isdirectory(work_dir)
-    call mkdir(work_dir)
+    call mkdir(work_dir, "p")
   endif
 
-  let planner = viler#applier#Planner#new(self._diff_id_gen, work_dir)
+  let reconciler = viler#Reconciler#new(id_gen, self._node_store, work_dir)
 
-  " TODO: Handle changes of all filers.
-  let g:_plan = planner.make_plan(diffs[0])
-
-  let fs = viler#Fs#new()
-  let applier = viler#diff#Applier#new(tree, final_diff, fs, work_dir)
-  call applier.apply_changes()
+  let filers = values(self._filers)
+  call reconciler.reconcile(filers)
 endfunction
