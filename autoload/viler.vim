@@ -2,9 +2,9 @@ function! viler#enable() abort
   augroup viler
     autocmd!
     autocmd BufNewFile,BufRead *.viler setfiletype viler
-    autocmd BufWritePre *.viler call viler#apply_changes()
     autocmd BufEnter *.viler call viler#on_buf_enter()
     autocmd BufLeave *.viler call viler#on_buf_leave()
+    autocmd BufWriteCmd *.viler call viler#on_buf_save()
   augroup END
 
   let work_dir = tempname()
@@ -56,6 +56,10 @@ endfunction
 
 function! viler#on_buf_leave() abort
   call s:current_filer().on_buf_leave()
+endfunction
+
+function! viler#on_buf_save() abort
+  call s:app.on_any_buf_save()
 endfunction
 
 function! viler#go_down_cursor_dir() abort

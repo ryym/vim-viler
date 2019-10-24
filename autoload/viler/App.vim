@@ -58,7 +58,23 @@ function! s:App.filer_for(bufnr) abort
   return get(self._filers, a:bufnr, 0)
 endfunction
 
-function! s:App.apply_changes() abort
+function! s:App.on_any_buf_save() abort
+  let filers = values(self._filers)
+
+  call self._apply_changes(filers)
+
+  let current_bufnr = bufnr('%')
+  for filer in filers
+    let buf = filer.buffer()
+    if buf.modified()
+      execute 'silent keepalt buffer' buf.nr()
+      silent noautocmd write
+    endif
+  endfor
+  execute 'silent keepalt buffer' current_bufnr
+endfunction
+
+function! s:App._apply_changes(filers) abort
   let id_gen = viler#IdGen#new()
 
   let work_dir = $HOME . '/.viler/apply'
@@ -67,7 +83,5 @@ function! s:App.apply_changes() abort
   endif
 
   let reconciler = viler#Reconciler#new(id_gen, self._node_store, work_dir)
-
-  let filers = values(self._filers)
-  call reconciler.reconcile(filers)
+  call reconciler.reconcile(a:filers)
 endfunction
