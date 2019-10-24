@@ -69,8 +69,8 @@ function! s:Buffer.node_lnum(node_id) abort
   return 0
 endfunction
 
-function! s:Buffer.display_nodes(dir_node, nodes) abort
-  call setbufline(self._nr, 1, s:dir_metadata(a:dir_node))
+function! s:Buffer.display_nodes(commit_id, dir_node, nodes) abort
+  call setbufline(self._nr, 1, s:filer_metadata(a:commit_id, a:dir_node))
 
   let lines = map(copy(a:nodes), {_, n -> self._node_to_line(n, 0, {})})
   call setbufline(self._nr, 2, lines)
@@ -92,7 +92,7 @@ endfunction
 
 function! s:Buffer.current_dir() abort
   let line = getbufline(self._nr, 1)[0]
-  return s:decode_dir_metadata(line)
+  return s:decode_filer_metadata(line)
 endfunction
 
 function! s:Buffer.node_row(lnum) abort
@@ -198,13 +198,13 @@ function! s:decode_node_line_meta(meta) abort
   return [str2nr(bufnr), str2nr(node_id), state]
 endfunction
 
-function! s:dir_metadata(dir_node) abort
-  let meta = a:dir_node.id . ' '
+function! s:filer_metadata(commit_id, dir_node) abort
+  let meta = a:commit_id . '_' . a:dir_node.id . ' '
   return meta . a:dir_node.abs_path()
 endfunction
 
-function! s:decode_dir_metadata(line) abort
-  let [meta, dir_path] = s:split_head_tail(a:line, '\v\d+')
+function! s:decode_filer_metadata(line) abort
+  let [meta, dir_path] = s:split_head_tail(a:line, '\v\d+_\d+')
   return {
     \   'node_id': str2nr(meta, 10),
     \   'path': trim(dir_path),

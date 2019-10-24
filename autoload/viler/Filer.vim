@@ -1,9 +1,10 @@
 let s:Filer = {}
 
-function! viler#Filer#new(buf, node_accessor) abort
+function! viler#Filer#new(commit_id, buf, node_accessor) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
   let filer._nodes = a:node_accessor
+  let filer._commit_id = a:commit_id
   return filer
 endfunction
 
@@ -15,6 +16,10 @@ function! s:Filer.on_buf_leave() abort
   call self._buf.on_leave()
 endfunction
 
+function! s:Filer.set_commit_id(id) abort
+  let self._commit_id = a:id
+endfunction
+
 function! s:Filer.buffer() abort
   return self._buf
 endfunction
@@ -24,10 +29,15 @@ function! s:Filer.display(dir) abort
 
   let dir_node = self._nodes.make(a:dir)
   let nodes = self._list_children(a:dir)
-  call self._buf.display_nodes(dir_node, nodes)
+  call self._buf.display_nodes(self._commit_id, dir_node, nodes)
   call self._buf.reset_cursor()
 
   return {'dir': dir_node, 'nodes': nodes}
+endfunction
+
+function! s:Filer.refresh() abort
+  let cur_dir = self._buf.current_dir()
+  call self.display(cur_dir.path)
 endfunction
 
 function! s:Filer._list_children(dir) abort

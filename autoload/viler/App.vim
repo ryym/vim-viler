@@ -12,12 +12,13 @@ function! viler#App#create(work_dir) abort
 endfunction
 
 function! viler#App#new(work_dir, node_store) abort
-  let viler = deepcopy(s:App)
-  let viler._filer_id = 0
-  let viler._filers = {}
-  let viler._work_dir = a:work_dir
-  let viler._node_store = a:node_store
-  return viler
+  let app = deepcopy(s:App)
+  let app._filer_id = 0
+  let app._filers = {}
+  let app._work_dir = a:work_dir
+  let app._node_store = a:node_store
+  let app._commit_id = 0
+  return app
 endfunction
 
 function! s:App.is_debug() abort
@@ -33,6 +34,7 @@ function! s:App.create_filer(dir) abort
   let node_accessor = self._node_store.accessor_for(bufnr)
 
   let filer = viler#Filer#new(
+    \   self._commit_id,
     \   buffer,
     \   node_accessor,
     \ )
@@ -62,14 +64,17 @@ function! s:App.on_any_buf_save() abort
   let filers = values(self._filers)
 
   call self._apply_changes(filers)
+  let self._commit_id += 1
 
   let current_bufnr = bufnr('%')
   for filer in filers
+    call filer.set_commit_id(self._commit_id)
     let buf = filer.buffer()
     if buf.modified()
       execute 'silent keepalt buffer' buf.nr()
       silent noautocmd write
     endif
+    call filer.refresh()
   endfor
   execute 'silent keepalt buffer' current_bufnr
 endfunction

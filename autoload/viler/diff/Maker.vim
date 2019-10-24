@@ -9,7 +9,7 @@ endfunction
 function! s:Maker.gather_changes(buf, diff) abort
   let dir_path = a:buf.current_dir().path
   let dir = {
-    \   'lnum': 1,
+    \   'lnum': a:buf.lnum_first() - 1,
     \   'path': dir_path,
     \   'depth': 0,
     \ }
