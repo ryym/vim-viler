@@ -209,8 +209,10 @@ endfunction
 
 function! s:decode_filer_metadata(line) abort
   let [meta, dir_path] = s:split_head_tail(a:line, '\v\d+_\d+')
+  let [commit_id, node_id] = split(meta, '_')
   return {
-    \   'node_id': str2nr(meta, 10),
+    \   'commit_id': str2nr(commit_id),
+    \   'node_id': str2nr(node_id),
     \   'path': trim(dir_path),
     \ }
 endfunction
