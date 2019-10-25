@@ -115,25 +115,29 @@ function! s:Buffer.modified() abort
   return getbufvar(self._nr, '&modified')
 endfunction
 
+function! s:Buffer.undotree() abort
+  return undotree()
+endfunction
+
+function! s:Buffer.undotree_curhead() abort
+  for entry in self.undotree().entries
+    if has_key(entry, 'curhead')
+      return entry
+    endif
+  endfor
+  return 0
+endfunction
+
 function! s:Buffer.undo() abort
   silent undo
 endfunction
 
 function! s:Buffer.redo() abort
-  let history = undotree().entries
-
   " Decide whether the 'redo'ne buffer should be modified or not.
   " For example, We don't want to make a buffer 'modified' just by 'redo'ing tree toggling.
-  let modified = 0
-  for entry in history
-    if has_key(entry, 'curhead')
-      let modified = !has_key(entry, 'save')
-      break
-    endif
-  endfor
-
+  let curhead = self.undotree_curhead()
+  let modified = !has_key(curhead, 'save')
   silent redo
-
   return modified
 endfunction
 

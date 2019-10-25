@@ -68,13 +68,10 @@ function! s:App.on_any_buf_save() abort
 
   let current_bufnr = bufnr('%')
   for filer in filers
-    call filer.set_commit_id(self._commit_id)
     let buf = filer.buffer()
-    if buf.modified()
-      execute 'silent keepalt buffer' buf.nr()
-      silent noautocmd write
-    endif
-    call filer.refresh()
+    execute 'silent keepalt buffer' buf.nr()
+    silent noautocmd update
+    call filer.commit(self._commit_id)
   endfor
   execute 'silent keepalt buffer' current_bufnr
 endfunction

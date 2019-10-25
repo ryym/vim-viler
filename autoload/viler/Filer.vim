@@ -5,6 +5,7 @@ function! viler#Filer#new(commit_id, buf, node_accessor) abort
   let filer._buf = a:buf
   let filer._nodes = a:node_accessor
   let filer._commit_id = a:commit_id
+  let filer._commit_state = {'undo_seq_last': 0}
   return filer
 endfunction
 
@@ -16,8 +17,13 @@ function! s:Filer.on_buf_leave() abort
   call self._buf.on_leave()
 endfunction
 
-function! s:Filer.set_commit_id(id) abort
-  let self._commit_id = a:id
+function! s:Filer.commit(commit_id) abort
+  let self._commit_id = a:commit_id
+
+  let undotree = self._buf.undotree()
+  let self._commit_state = { 'undo_seq_last': undotree.seq_last + 1 }
+
+  call self.refresh()
 endfunction
 
 function! s:Filer.buffer() abort
@@ -134,10 +140,18 @@ function! s:Filer.undo() abort
     return
   endif
 
-  let cur_dir = self._buf.current_dir()
-  call self._nodes.clear()
+  let prev_dir = self._buf.current_dir()
   call self._buf.undo()
-  call self._restore_nodes_on_buf(cur_dir)
+
+  " Currently we do not support undo over commit.
+  let curhead = self._buf.undotree_curhead()
+  if curhead.seq <= self._commit_state.undo_seq_last
+    return
+  endif
+
+  call self._nodes.clear()
+  call self._restore_nodes_on_buf(prev_dir)
+
   call self._buf.save()
 endfunction
 
@@ -147,10 +161,11 @@ function! s:Filer.redo() abort
     return
   endif
 
-  let cur_dir = self._buf.current_dir()
-  call self._nodes.clear()
+  let prev_dir = self._buf.current_dir()
   let modified = self._buf.redo()
-  call self._restore_nodes_on_buf(cur_dir)
+
+  call self._nodes.clear()
+  call self._restore_nodes_on_buf(prev_dir)
 
   if !modified
     call self._buf.save()
