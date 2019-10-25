@@ -26,6 +26,11 @@ function! s:Filer.commit(commit_id) abort
   call self.refresh()
 endfunction
 
+function! s:Filer.buf_state() abort
+  let cur_dir = self._buf.current_dir()
+  return { 'commit_id': cur_dir.commit_id }
+endfunction
+
 function! s:Filer.buffer() abort
   return self._buf
 endfunction

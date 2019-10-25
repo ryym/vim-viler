@@ -85,5 +85,5 @@ function! s:App._apply_changes(filers) abort
   endif
 
   let reconciler = viler#Reconciler#new(id_gen, self._node_store, work_dir)
-  call reconciler.reconcile(a:filers)
+  call reconciler.reconcile(self._commit_id, a:filers)
 endfunction

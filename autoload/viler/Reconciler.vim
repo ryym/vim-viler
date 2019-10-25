@@ -11,12 +11,16 @@ function! viler#Reconciler#new(id_gen, node_store, work_dir_path) abort
   return reconciler
 endfunction
 
-function! s:Reconciler.reconcile(filers) abort
+function! s:Reconciler.reconcile(current_commit_id, filers) abort
   let diff_maker = viler#diff#Maker#new(self._node_store)
 
   let diffs = []
   for filer in a:filers
     let diff = viler#diff#Diff#new(self._id_gen)
+    let buf_state = filer.buf_state()
+    if buf_state.commit_id < a:current_commit_id
+      throw "[viler] Filer's state is old. Did you use undo? Undo over save is not supported."
+    endif
     call diff_maker.gather_changes(filer.buffer(), diff)
     call add(diffs, diff)
   endfor
