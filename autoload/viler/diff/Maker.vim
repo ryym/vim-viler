@@ -6,6 +6,16 @@ function! viler#diff#Maker#new(node_store) abort
   return maker
 endfunction
 
+function! s:Maker.is_dirty(buf, dir) abort
+  let id_gen = viler#IdGen#new()
+  let diff = viler#diff#Diff#new(id_gen)
+  if !has_key(a:dir, 'lnum')
+    let a:dir.lnum = a:buf.lnum_first() - 1
+  endif
+  call self._gather_changes(a:buf, a:dir, diff)
+  return !diff.is_empty()
+endfunction
+
 function! s:Maker.gather_changes(buf, diff) abort
   let dir_path = a:buf.current_dir().path
   let dir = {

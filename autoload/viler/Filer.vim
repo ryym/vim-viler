@@ -1,9 +1,10 @@
 let s:Filer = {}
 
-function! viler#Filer#new(commit_id, buf, node_accessor) abort
+function! viler#Filer#new(commit_id, buf, node_accessor, dirty_checker) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
   let filer._nodes = a:node_accessor
+  let filer._dirty_checker = a:dirty_checker
   let filer._commit_id = a:commit_id
   let filer._commit_state = {'undo_seq_last': 0}
   return filer
@@ -81,6 +82,12 @@ endfunction
 function! s:Filer.go_up_dir() abort
   let dir_id = self._buf.current_dir().node_id
   let dir_node = self._nodes.get(dir_id)
+
+  let dir = {'path': dir_node.abs_path(), 'depth': 0}
+  if self._dirty_checker.is_dirty(self._buf, dir)
+    throw '[viler] Cannot leave unsaved edited directory'
+  endif
+
   let shown_nodes = self.display(dir_node.dir)
 
   let prev_dir_node_id = 0
@@ -100,7 +107,6 @@ function! s:Filer.go_up_dir() abort
 endfunction
 
 function! s:Filer.toggle_tree() abort
-  " TODO: Prevent toggling of edited directory.
   let row = self._buf.node_row(self._buf.lnum_cursor())
   if !row.is_dir
     return
@@ -110,9 +116,14 @@ function! s:Filer.toggle_tree() abort
 
   let node = self._nodes.get(row.node_id)
   if row.state.tree_open
+    let dir = {'lnum': row.lnum, 'path': node.abs_path(), 'depth': row.depth + 1}
+    if self._dirty_checker.is_dirty(self._buf, dir)
+      throw '[viler] Cannot close unsaved edited directory'
+    endif
     call self._buf.update_node_row(node, row, {'tree_open': 0})
     call self._close_tree(node, row)
   else
+
     call self._buf.update_node_row(node, row, {'tree_open': 1})
     let nodes = self._list_children(node.abs_path())
     call self._buf.append_nodes(row.lnum, nodes, row.depth + 1)

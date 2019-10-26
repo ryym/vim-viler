@@ -32,11 +32,13 @@ function! s:App.create_filer(dir) abort
   let bufnr = buffer.open(temp_file)
 
   let node_accessor = self._node_store.accessor_for(bufnr)
+  let dirty_checker = viler#diff#Maker#new(self._node_store)
 
   let filer = viler#Filer#new(
     \   self._commit_id,
     \   buffer,
     \   node_accessor,
+    \   dirty_checker,
     \ )
   let self._filers[bufnr] = filer
 
