@@ -9,10 +9,6 @@ function! viler#diff#Diff#new(id_gen) abort
   return diff
 endfunction
 
-function! s:Diff.is_empty() abort
-  return len(self.dirops) == 0
-endfunction
-
 function! s:Diff.new_file(path, name, stat) abort
   let op = self._get_or_make_op(a:path)
   call add(op.add, {'path': a:path . '/' . a:name, 'is_dir': a:stat.is_dir})
