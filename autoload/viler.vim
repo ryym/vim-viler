@@ -81,22 +81,3 @@ endfunction
 function! viler#redo() abort
   call s:current_filer().redo()
 endfunction
-
-function! viler#apply_changes() abort
-  if s:app.is_debug()
-    call s:app.apply_changes()
-    call viler#open()
-    return
-  endif
-
-  try
-    call s:app.apply_changes()
-    call viler#open()
-  catch
-    " Rethrow the caught exception to:
-    " - avoid printing the stack trace (function names)
-    " - be sure to abort BufWrite on unexpected errors (e.g. unknown function).
-    " Also a space prefix is necessary because we cannot throw an error starting with 'Vim:'.
-    throw ' ' . v:exception
-  endtry
-endfunction
