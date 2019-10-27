@@ -39,7 +39,7 @@ function! s:Walker._walk_tree(dir, buf, ctx) abort
     endif
 
     let node = self._node_store.get_node(row.bufnr, row.node_id)
-    let row_path = a:dir.path . '/' . row.name
+    let row_path = viler#Path#join(a:dir.path, row.name)
     let src_path = node.abs_path()
 
     if src_path == row_path
@@ -61,7 +61,7 @@ function! s:Walker._walk_tree(dir, buf, ctx) abort
   let real_files = readdir(a:dir.path)
   for name in real_files
     if !has_key(unchanged_files, name)
-      let is_dir = isdirectory(a:dir.path . '/' . name)
+      let is_dir = isdirectory(viler#Path#join(a:dir.path, name))
       call a:ctx.on_deleted_file(a:dir, {'name': name, 'is_dir': is_dir})
     endif
   endfor

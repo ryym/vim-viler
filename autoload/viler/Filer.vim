@@ -55,7 +55,7 @@ endfunction
 function! s:Filer._list_children(dir) abort
   let nodes = []
   for name in readdir(a:dir)
-    let node = self._nodes.make(a:dir . '/' . name)
+    let node = self._nodes.make(viler#Path#join(a:dir, name))
     call add(nodes, node)
   endfor
   return sort(nodes, function('s:sort_nodes_by_type_and_name'))
@@ -218,7 +218,7 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
       endwhile
     endif
 
-    let file_path = dir_path . '/' . row.name
+    let file_path = viler#Path#join(dir_path, row.name)
     call self._nodes.get_or_make(row.node_id, file_path)
     let prev_depth = row.depth
     let prev_name = row.name

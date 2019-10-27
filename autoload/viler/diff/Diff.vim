@@ -11,11 +11,11 @@ endfunction
 
 function! s:Diff.new_file(path, name, stat) abort
   let op = self._get_or_make_op(a:path)
-  call add(op.add, {'path': a:path . '/' . a:name, 'is_dir': a:stat.is_dir})
+  call add(op.add, {'path': viler#Path#join(a:path, a:name), 'is_dir': a:stat.is_dir})
 endfunction
 
 function! s:Diff.moved_file(path, name, src) abort
-  let dest_path = a:path . '/' . a:name
+  let dest_path = viler#Path#join(a:path, a:name)
   let src_parent_path = fnamemodify(a:src.abs_path, ':h')
 
   let move_id = self._move_id.make_id()
@@ -36,7 +36,7 @@ endfunction
 
 function! s:Diff.deleted_file(path, name, stat) abort
   let op = self._get_or_make_op(a:path)
-  let abs_path = a:path . '/' . a:name
+  let abs_path = viler#Path#join(a:path, a:name)
   let op.delete[abs_path] = {'path': abs_path, 'is_dir': a:stat.is_dir}
   let self.deletions[abs_path] = 1
 endfunction

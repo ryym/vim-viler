@@ -46,7 +46,7 @@ endfunction
 
 function! s:Applier._new_work_file() abort
   let self._work_file_id += 1
-  let path = self._work_dir.path . '/' . self._work_file_id
+  let path = viler#Path#join(self._work_dir.path, self._work_file_id)
   return {'path': path}
 endfunction
 

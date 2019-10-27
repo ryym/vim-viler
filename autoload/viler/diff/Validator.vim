@@ -89,7 +89,7 @@ function! s:Validator._validate_dirop(diff, op, errs) abort
   let dir_path = a:op.path
 
   for name in readdir(dir_path)
-    let full_path = dir_path . '/' . name
+    let full_path = viler#Path#join(dir_path, name)
     let is_dir = isdirectory(full_path)
     let files[full_path] = 1
   endfor
