@@ -27,7 +27,7 @@ function! viler#open() abort
   setlocal concealcursor=nvic
 
   " XXX: Temporary.
-  Map n (buffer silent nowait) <C-l> ::call viler#go_down_cursor_dir()
+  Map n (buffer silent nowait) <C-l> ::call viler#open_cursor_file()
   Map n (buffer silent nowait) <C-h> ::call viler#go_up_dir()
   Map n (buffer silent nowait) <C-j> ::call viler#toggle_tree()
   Map n (buffer silent nowait) u ::call viler#undo()
@@ -62,8 +62,9 @@ function! viler#on_buf_save() abort
   call s:app.on_any_buf_save()
 endfunction
 
-function! viler#go_down_cursor_dir() abort
-  call s:current_filer().go_down_cursor_dir()
+function! viler#open_cursor_file(...) abort
+  let cmd = get(a:000, 0, 'wincmd w | drop')
+  call s:current_filer().open_cursor_file(cmd)
 endfunction
 
 function! viler#go_up_dir() abort

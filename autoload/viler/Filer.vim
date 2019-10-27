@@ -71,11 +71,21 @@ function! s:sort_nodes_by_type_and_name(a, b) abort
   return a:a.name < a:b.name ? -1 : 1
 endfunction
 
-function! s:Filer.go_down_cursor_dir() abort
+" function! s:Filer.go_down_cursor_dir() abort
+"   let row = self._buf.node_row(self._buf.lnum_cursor())
+"   if row.is_dir
+"     let node = self._nodes.get(row.node_id)
+"     call self.display(node.abs_path())
+"   endif
+" endfunction
+
+function! s:Filer.open_cursor_file(cmd) abort
   let row = self._buf.node_row(self._buf.lnum_cursor())
-  if row.is_dir
-    let node = self._nodes.get(row.node_id)
+  let node = self._nodes.get(row.node_id)
+  if node.is_dir
     call self.display(node.abs_path())
+  else
+    execute a:cmd node.abs_path()
   endif
 endfunction
 
