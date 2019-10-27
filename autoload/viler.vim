@@ -23,7 +23,7 @@ function! viler#open() abort
 
   call s:app.create_filer(getcwd())
 
-  setlocal conceallevel=0 " XXX: For debag.
+  setlocal conceallevel=1
   setlocal concealcursor=nvic
 
   " XXX: Temporary.
