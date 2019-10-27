@@ -11,13 +11,19 @@ endfunction
 
 function! s:Applier.apply_changes() abort
   for move in values(self._diff.moves)
-    let work_path = self._new_work_file().path
     if move.is_copy
+      let work_path = self._new_work_file().path
       call self._fs.copy_file(move.src_path, work_path)
-    else
-      call self._fs.move_file(move.src_path, work_path)
+      let move.src_path = work_path
     endif
-    let move.src_path = work_path
+  endfor
+
+  for move in values(self._diff.moves)
+    if !move.is_copy
+      let work_path = self._new_work_file().path
+      call self._fs.move_file(move.src_path, work_path)
+      let move.src_path = work_path
+    endif
   endfor
 
   let dirops = values(self._diff.dirops)
