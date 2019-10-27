@@ -31,8 +31,9 @@ function! s:Applier.apply_changes() abort
 
   for op in dirops
     for path in keys(op.delete)
-      " TODO: Move file instead of actually deleting it.
-      call self._fs.delete_file(path)
+      " For now we do not actually delete a file for safety.
+      let work_path = self._new_work_file().path
+      call self._fs.move_file(path, work_path)
     endfor
 
     for move_id in op.move_from
