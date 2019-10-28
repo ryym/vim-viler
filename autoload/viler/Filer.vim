@@ -216,8 +216,6 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
       continue
     endif
 
-    " TODO: Consider wrong indentations.
-
     if prev_depth < row.depth
       let dir_path .= '/' . prev_name
     elseif prev_depth > row.depth
