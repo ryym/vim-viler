@@ -31,7 +31,10 @@ function! s:Reconciler.reconcile(current_commit_id, filers) abort
     throw '[viler] ' . string(errs)
   endif
 
-  let work_dir = { 'path': self._work_dir_path }
+  " TODO: Delete old work files periodically.
+  let work_path = viler#Path#join(self._work_dir_path, localtime())
+  call mkdir(work_path, "p")
+  let work_dir = { 'path': work_path }
   let applier = viler#diff#Applier#new(final_diff, self._fs, work_dir)
   call applier.apply_changes()
 endfunction
