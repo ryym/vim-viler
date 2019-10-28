@@ -26,12 +26,16 @@ function! viler#open() abort
   setlocal conceallevel=1
   setlocal concealcursor=nvic
 
-  " XXX: Temporary.
-  Map n (buffer silent nowait) <C-l> ::call viler#open_cursor_file()
-  Map n (buffer silent nowait) <C-h> ::call viler#go_up_dir()
-  Map n (buffer silent nowait) <C-j> ::call viler#toggle_tree()
-  Map n (buffer silent nowait) u ::call viler#undo()
-  Map n (buffer silent nowait) <C-r> ::call viler#redo()
+  call s:add_default_key_mappings()
+endfunction
+
+" TODO: Enable to configure.
+function! s:add_default_key_mappings() abort
+  nnoremap <buffer><silent><nowait> <C-l> :<C-u>call viler#open_cursor_file()<CR>
+  nnoremap <buffer> <silent> <nowait> <C-h> :<C-u>call viler#go_up_dir()<CR>
+  nnoremap <buffer> <silent> <nowait> <C-j> :<C-u>call viler#toggle_tree()<CR>
+  nnoremap <buffer> <silent> <nowait> u :<C-u>call viler#undo()<CR>
+  nnoremap <buffer> <silent> <nowait> <C-r> :<C-u>call viler#redo()<CR>
 endfunction
 
 function! viler#_debug() abort
