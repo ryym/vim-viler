@@ -16,7 +16,7 @@ It has many TODOs and bugs.
 - Editable
 
 Because you can edit a filer as a normal text, there is no need to configure and remember how to add/copy/move/delete files.
-Just edit lines as you like. When you save it Viler detects changes and applies them to an actual file system. 
+Just edit lines as you like. When you save it Viler detects changes and applies them to the actual file system. 
 
 ## Installation
 
