@@ -1,3 +1,6 @@
+" TODO: Remove (or disable).
+let g:_viler_is_debug = 1
+
 function! viler#enable() abort
   augroup viler
     autocmd!
@@ -25,6 +28,14 @@ function! viler#open() abort
 
   setlocal conceallevel=1
   setlocal concealcursor=nvic
+  setlocal nospell
+  setlocal noswapfile
+  setlocal nowrap
+
+  if !g:_viler_is_debug
+    setlocal bufhidden=hide
+    setlocal nobuflisted
+  endif
 
   call s:add_default_key_mappings()
 endfunction
