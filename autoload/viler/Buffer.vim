@@ -78,6 +78,13 @@ function! s:Buffer.display_nodes(commit_id, dir_node, nodes) abort
   let first_line_to_remove = len(a:nodes) + 2
   call deletebufline(self._nr, first_line_to_remove, '$')
 
+  " If this buffer is hidden, `_lnum_last` could be outdated.
+  " For example, another filer may delete a file in a directory
+  " this buffer displays. In this case the last lnum must decrease.
+  if self._lnum_last > 0
+    let self._lnum_last = line('$')
+  endif
+
   call self.save()
 endfunction
 
