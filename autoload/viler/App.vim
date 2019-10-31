@@ -21,10 +21,6 @@ function! viler#App#new(work_dir, node_store) abort
   return app
 endfunction
 
-function! s:App.is_debug() abort
-  return 1
-endfunction
-
 function! s:App.create_filer(dir) abort
   let self._filer_id += 1
   let temp_file = self._work_dir . '/filer' . self._filer_id . '.viler'

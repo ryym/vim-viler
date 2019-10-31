@@ -40,17 +40,25 @@ function! viler#open() abort
   call s:add_default_key_mappings()
 endfunction
 
+function! viler#open_vertical(width) abort
+  silent topleft vnew
+  execute 'vertical resize' a:width
+  call viler#open()
+endfunction
+
 " TODO: Enable to configure.
 function! s:add_default_key_mappings() abort
   nnoremap <buffer><silent><nowait> <C-l> :<C-u>call viler#open_cursor_file()<CR>
   nnoremap <buffer> <silent> <nowait> <C-h> :<C-u>call viler#go_up_dir()<CR>
   nnoremap <buffer> <silent> <nowait> <C-j> :<C-u>call viler#toggle_tree()<CR>
+  nnoremap <buffer> <silent> <nowait> f :<C-u>call viler#toggle_tree()<CR>
   nnoremap <buffer> <silent> <nowait> u :<C-u>call viler#undo()<CR>
   nnoremap <buffer> <silent> <nowait> <C-r> :<C-u>call viler#redo()<CR>
 endfunction
 
-function! viler#_debug() abort
-  return s:current_filer()
+" For debugging.
+function! viler#_app() abort
+  return s:app
 endfunction
 
 function! s:current_filer() abort
