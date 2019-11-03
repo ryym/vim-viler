@@ -8,8 +8,8 @@ workflows:
 jobs:
   test:
     docker:
-      - image: lambdalisue/vim-ci:v8.1.2000
+      - image: ryym/vim-ci-themis:v8.1.2000
     steps:
       - checkout
-      - run: pwd
-      - run: ls
+      - run: themis --version
+      - run: themis test
