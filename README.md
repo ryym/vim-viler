@@ -1,5 +1,7 @@
 # Viler
 
+[![CircleCI](https://circleci.com/gh/ryym/vim-viler.svg?style=svg)](https://circleci.com/gh/ryym/vim-viler)
+
 Viler is a file explorer plugin for Vim, with an ability of editing directory structures by hand.
 
 ![](docs/demo.gif)

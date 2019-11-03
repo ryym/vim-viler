@@ -1,0 +1,15 @@
+version: 2.1
+
+workflows:
+  test:
+    jobs:
+      - test
+
+jobs:
+  test:
+    docker:
+      - image: lambdalisue/vim-ci:v8.1.2000
+    steps:
+      - checkout
+      - run: pwd
+      - run: ls
