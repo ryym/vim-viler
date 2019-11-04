@@ -2,13 +2,15 @@ let s:Checker = {}
 
 function! viler#diff#Checker#new(node_store) abort
   let checker = deepcopy(s:Checker)
-  let checker._walker = viler#diff#Walker#new(a:node_store)
+  let checker._walker = viler#diff#Walker#new()
+  let checker._node_store = a:node_store
   return checker
 endfunction
 
 function! s:Checker.is_dirty(dir, buf) abort
   let handler = s:new_handler()
-  call self._walker.walk_tree(a:dir, a:buf, handler)
+  let filetree = viler#Filetree#from_buf(a:buf, self._node_store)
+  call self._walker.walk_tree(a:dir, filetree, handler)
   return handler.is_dirty
 endfunction
 

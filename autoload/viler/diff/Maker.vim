@@ -1,20 +1,19 @@
 let s:Maker = {}
 
-function! viler#diff#Maker#new(node_store) abort
+function! viler#diff#Maker#new() abort
   let maker = deepcopy(s:Maker)
-  let maker._node_store = a:node_store
-  let maker._walker = viler#diff#Walker#new(a:node_store)
+  let maker._walker = viler#diff#Walker#new()
   return maker
 endfunction
 
-function! s:Maker.gather_changes(buf, diff) abort
-  let dir_path = a:buf.current_dir().path
+function! s:Maker.gather_changes(filetree, diff) abort
+  let dir_path = a:filetree.current_dir_path()
   let dir = {
     \   'path': dir_path,
     \   'depth': 0,
     \ }
   let handler = s:new_handler(a:diff)
-  call self._walker.walk_tree(dir, a:buf, handler)
+  call self._walker.walk_tree(dir, a:filetree, handler)
 endfunction
 
 let s:Handler = {}
