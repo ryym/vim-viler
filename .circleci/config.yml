@@ -12,4 +12,4 @@ jobs:
     steps:
       - checkout
       - run: themis --version
-      - run: themis test
+      - run: themis --recursive test
