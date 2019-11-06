@@ -28,3 +28,42 @@ endfunction
 function! s:Filetree.associated_node(row) abort
   return self._node_store.get_node(a:row.bufnr, a:row.node_id)
 endfunction
+
+function! s:Filetree.iter() abort
+  return s:new_iter(self, self._buf.lnum_first())
+endfunction
+
+function! s:Filetree.iter_from(lnum) abort
+  return s:new_iter(self, a:lnum)
+endfunction
+
+let s:Iter = {}
+
+function! s:new_iter(filetree, start_lnum) abort
+  let iter = copy(s:Iter)
+  let iter.filetree = a:filetree
+  let iter._lnum = a:start_lnum
+  let iter._lnum_last = a:filetree._buf.lnum_last()
+  return iter
+endfunction
+
+function! s:Iter.has_next() abort
+  return self._lnum <= self._lnum_last
+endfunction
+
+function! s:Iter.lnum() abort
+  return self._lnum
+endfunction
+
+function! s:Iter.peek() abort
+  return self.filetree._buf.node_row(self._lnum)
+endfunction
+
+function! s:Iter.next() abort
+  if !self.has_next()
+    throw 'Filetree iterator is at end'
+  endif
+  let row = self.peek()
+  let self._lnum += 1
+  return row
+endfunction
