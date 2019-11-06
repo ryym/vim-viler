@@ -13,7 +13,7 @@ function! s:Maker.gather_changes(filetree, diff) abort
     \   'depth': 0,
     \ }
   let handler = s:new_handler(a:diff)
-  call self._walker.walk_tree(dir, a:filetree, handler)
+  call self._walker.walk_tree(dir, a:filetree.iter(), handler)
 endfunction
 
 let s:Handler = {}

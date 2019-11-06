@@ -10,7 +10,8 @@ endfunction
 function! s:Checker.is_dirty(dir, buf) abort
   let handler = s:new_handler()
   let filetree = viler#Filetree#from_buf(a:buf, self._node_store)
-  call self._walker.walk_tree(a:dir, filetree, handler)
+  let start_lnum = get(a:dir, 'lnum', a:buf.lnum_first())
+  call self._walker.walk_tree(a:dir, filetree.iter_from(start_lnum), handler)
   return handler.is_dirty
 endfunction
 

@@ -118,7 +118,7 @@ function! s:Filer.toggle_tree() abort
 
   let node = self._nodes.get(row.node_id)
   if row.state.tree_open
-    let dir = {'lnum': row.lnum, 'path': node.abs_path(), 'depth': row.depth + 1}
+    let dir = {'lnum': row.lnum + 1, 'path': node.abs_path(), 'depth': row.depth + 1}
     if self._diff_checker.is_dirty(dir, self._buf)
       throw '[viler] Cannot close unsaved edited directory'
     endif

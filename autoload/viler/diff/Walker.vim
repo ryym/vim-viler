@@ -5,28 +5,21 @@ function! viler#diff#Walker#new() abort
   return walker
 endfunction
 
-function! s:Walker.walk_tree(dir, tree, handlers) abort
-  if !has_key(a:dir, 'lnum')
-    let a:dir.lnum = a:tree.lnum_first() - 1
-  endif
-  call self._walk_tree(a:dir, a:tree, a:handlers)
+function! s:Walker.walk_tree(dir, tree_iter, handlers) abort
+  call self._walk_tree(a:dir, a:tree_iter, a:handlers)
 endfunction
 
-function! s:Walker._walk_tree(dir, tree, ctx) abort
-  let l = a:dir.lnum
-  let last_lnum = a:tree.lnum_last()
+function! s:Walker._walk_tree(dir, iter, ctx) abort
   let unchanged_files = {}
 
-  while l < last_lnum
-    let l += 1
-
-    let row = a:tree.row(l)
-    if row.depth < a:dir.depth
+  while a:iter.has_next()
+    if a:iter.peek().depth < a:dir.depth
       break
     endif
 
+    let row = a:iter.next()
     if row.depth != a:dir.depth
-      throw '[vfiler] Wierd indentation at line ' . row.lnum . ': ' . row.name
+      throw '[vfiler] Wierd indentation at line ' . a:iter.lnum() - 1 . ': ' . row.name
     endif
 
     if row.is_new
@@ -36,23 +29,23 @@ function! s:Walker._walk_tree(dir, tree, ctx) abort
       continue
     endif
 
-    let node = a:tree.associated_node(row)
+    let node = a:iter.filetree.associated_node(row)
     let row_path = viler#Path#join(a:dir.path, row.name)
     let src_path = node.abs_path()
 
     if src_path == row_path
       let unchanged_files[row.name] = 1
       if row.is_dir && row.state.tree_open
-        let dir = s:next_dir_ctx(l, a:dir, src_path)
-        let l = self._walk_tree(dir, a:tree, a:ctx)
+        let dir = s:next_dir_ctx(a:dir, src_path)
+        call self._walk_tree(dir, a:iter, a:ctx)
       endif
       continue
     endif
 
     call a:ctx.on_moved_file(a:dir, row, {'path': src_path, 'node': node})
     if row.is_dir && row.state.tree_open
-      let dir = s:next_dir_ctx(l, a:dir, src_path)
-      let l = self._walk_tree(dir, a:buf, a:ctx)
+      let dir = s:next_dir_ctx(a:dir, src_path)
+      call self._walk_tree(dir, a:iter, a:ctx)
     endif
   endwhile
 
@@ -63,13 +56,10 @@ function! s:Walker._walk_tree(dir, tree, ctx) abort
       call a:ctx.on_deleted_file(a:dir, {'name': name, 'is_dir': is_dir})
     endif
   endfor
-
-  return l - 1
 endfunction
 
-function! s:next_dir_ctx(l, dir, path) abort
+function! s:next_dir_ctx(dir, path) abort
   let next_dir = {
-    \   'lnum': a:l,
     \   'path': a:path,
     \   'depth': a:dir.depth + 1,
     \ }
