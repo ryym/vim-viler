@@ -17,6 +17,10 @@ function! viler#testutil#Flist#new(lines) abort
   return flist
 endfunction
 
+function! viler#testutil#Flist#from_text(text) abort
+  return viler#testutil#Flist#new(split(a:text, '\n'))
+endfunction
+
 function! viler#testutil#Flist#from_rows(rows) abort
   let flist = deepcopy(s:Flist)
   let flist._rows = a:rows

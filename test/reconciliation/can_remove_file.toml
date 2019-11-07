@@ -1,0 +1,20 @@
+before = """
+hello/
+  a
+  b
+  c
+"""
+
+after = """
+hello/
+  a
+  c
+"""
+
+[[draft]]
+at = ""
+tree = """
+hello/
+  a
+  c
+"""

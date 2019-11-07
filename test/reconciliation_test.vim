@@ -25,6 +25,7 @@ function! s:suite.__table__() abort
 
   " Define reconciliation test cases dynamically from fixtures.
   for name in readdir(s:fixtures_root)
+    let name = fnamemodify(name, ':r') " Remove extension.
     let suite[name] = funcref('s:reconcile_test', [name])
   endfor
 endfunction
@@ -50,15 +51,13 @@ function! s:reconcile_test(name) abort
 endfunction
 
 function! s:load_fixtures(path, work_path) abort
-  let tree_before = readfile(a:path . '/before.flist')
-  let flist_before = viler#testutil#Flist#new(tree_before)
+  let conf = s:load_toml_as_json(a:path . '.toml')
 
-  let tree_after = readfile(a:path . '/after.flist')
-  let flist_after = viler#testutil#Flist#new(tree_after)
+  let flist_before = viler#testutil#Flist#from_text(conf.before)
+  let flist_after = viler#testutil#Flist#from_text(conf.after)
 
-  let draft_conf = s:load_toml_as_json(a:path . '/drafts.toml')
   let drafts = []
-  for draft in draft_conf.draft
+  for draft in conf.draft
     let flist = viler#testutil#Flist#new(split(draft.tree, '\n'))
     let draft_root = viler#Path#join(a:work_path, draft.at)
     let mock_tree = viler#testutil#FlistFiletree#new(draft_root, flist)
