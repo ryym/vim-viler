@@ -53,4 +53,3 @@ function! s:suite.write_specified_content_to_file() abort
   let made = fs.files_to_flist(self._work_dir)
   call s:assert.equals(made.to_s(), flist.to_s())
 endfunction
-

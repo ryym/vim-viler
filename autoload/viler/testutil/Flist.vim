@@ -102,6 +102,8 @@ function! s:decode_line(lnum, line) abort
       let row.src_path = part[5:]
     elseif part[0:7] == 'content:'
       let row.content = part[8:]
+    else
+      throw '[Flist] Unknown attribute ' . part
     endif
   endfor
 
