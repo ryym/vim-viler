@@ -12,6 +12,10 @@ function! s:Fs.make_file(path) abort
   call writefile([], a:path)
 endfunction
 
+function! s:Fs.make_file_with(path, content) abort
+  call writefile(a:content, a:path)
+endfunction
+
 function! s:Fs.make_dir(path) abort
   call mkdir(a:path)
 endfunction

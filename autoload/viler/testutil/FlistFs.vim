@@ -27,14 +27,18 @@ function! s:FlistFs._flist_to_files(iter, ctx) abort
     let row = a:iter.next()
     let path = viler#Path#join(a:ctx.dir, row.name)
 
-    if !row.is_dir
-      call self._fs.make_file(path)
+    if row.is_dir
+      call self._fs.make_dir(path)
+      let ctx = {'depth': a:ctx.depth + 1, 'dir': path}
+      call self._flist_to_files(a:iter, ctx)
       continue
     endif
 
-    call self._fs.make_dir(path)
-    let ctx = {'depth': a:ctx.depth + 1, 'dir': path}
-    call self._flist_to_files(a:iter, ctx)
+    if has_key(row, 'content')
+      call self._fs.make_file_with(path, [row.content])
+    else
+      call self._fs.make_file(path)
+    endif
   endwhile
 endfunction
 
@@ -55,8 +59,14 @@ function! s:FlistFs._files_to_flist(dir, rows, depth) abort
       \   'depth': a:depth,
       \ }
     call add(a:rows, row)
+
     if is_dir
       call self._files_to_flist(path, a:rows, a:depth + 1)
+    else
+      let content = readfile(path)
+      if len(content) > 0
+        let row.content = content[0]
+      endif
     endif
   endfor
 endfunction

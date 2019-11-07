@@ -95,6 +95,12 @@ function! s:decode_line(lnum, line) abort
     \   'is_new': 0,
     \ }
 
+  for part in parts[1:-1]
+    if part[0:7] == 'content:'
+      let row.content = part[8:]
+    endif
+  endfor
+
   if is_dir
     let row.state = {'tree_open': open}
   endif
@@ -103,7 +109,11 @@ endfunction
 
 function! s:row_to_s(row) abort
   let indent = repeat(' ', a:row.depth * 2)
-  return indent . a:row.name . (a:row.is_dir ? '/' : '')
+  let line = indent . a:row.name . (a:row.is_dir ? '/' : '')
+  if has_key(a:row, 'content')
+    let line .= ' ' . 'content:' . a:row.content
+  endif
+  return line
 endfunction
 
 let s:Iter = {}
