@@ -23,35 +23,41 @@ endfunction
 function! s:suite.__table__() abort
   let suite = themis#suite('table')
 
+  let names = readdir(s:fixtures_root)
+  let confs = []
+  for name in names
+    let name = fnamemodify(name, ':r')
+    let work_dir = s:work_dir . '/' . name
+    let conf = s:load_fixtures(s:fixtures_root, name, work_dir)
+    call add(confs, conf)
+  endfor
+
   " Define reconciliation test cases dynamically from fixtures.
-  for name in readdir(s:fixtures_root)
-    let name = fnamemodify(name, ':r') " Remove extension.
-    let suite[name] = funcref('s:reconcile_test', [name])
+  for conf in confs
+    let suite[conf.name] = funcref('s:reconcile_test', [conf])
   endfor
 endfunction
 
-function! s:reconcile_test(name) abort
-  let work_dir = s:work_dir . '/' . a:name
-  call mkdir(work_dir)
+function! s:reconcile_test(conf) abort
+  call mkdir(a:conf.work_dir)
 
-  let conf = s:load_fixtures(s:fixtures_root . a:name, work_dir)
   let ffs = viler#testutil#FlistFs#create()
 
   " Create actual file tree.
-  call ffs.flist_to_files(work_dir, conf.before)
+  call ffs.flist_to_files(a:conf.work_dir, a:conf.before)
 
   " Apply reconciliation with mock drafts.
   let id_gen = viler#IdGen#new()
-  let reconciler = viler#Reconciler#new(id_gen, s:work_dir . '/__' . a:name)
-  call reconciler.reconcile(0, conf.drafts)
+  let reconciler = viler#Reconciler#new(id_gen, s:work_dir . '/__' . a:conf.name)
+  call reconciler.reconcile(0, a:conf.drafts)
 
   " Confirm the result file tree is same as expected.
-  let got = ffs.files_to_flist(work_dir)
-  call s:assert.equals(got.to_s(), conf.after.to_s())
+  let got = ffs.files_to_flist(a:conf.work_dir)
+  call s:assert.equals(got.to_s(), a:conf.after.to_s())
 endfunction
 
-function! s:load_fixtures(path, work_path) abort
-  let conf = s:load_toml_as_json(a:path . '.toml')
+function! s:load_fixtures(root, name, work_path) abort
+  let conf = s:load_toml_as_json(a:root . a:name . '.toml')
 
   let flist_before = viler#testutil#Flist#from_text(conf.before)
   let flist_after = viler#testutil#Flist#from_text(conf.after)
@@ -65,6 +71,8 @@ function! s:load_fixtures(path, work_path) abort
   endfor
 
   return {
+    \   'name': a:name,
+    \   'work_dir': a:work_path,
     \   'before': flist_before,
     \   'after': flist_after,
     \   'drafts': drafts,
