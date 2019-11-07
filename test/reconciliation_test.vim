@@ -32,6 +32,11 @@ function! s:suite.__table__() abort
     call add(confs, conf)
   endfor
 
+  let only_targets = copy(confs)->filter({_, c -> c.only})
+  if len(only_targets) > 0
+    let confs = only_targets
+  endif
+
   " Define reconciliation test cases dynamically from fixtures.
   for conf in confs
     let suite[conf.name] = funcref('s:reconcile_test', [conf])
@@ -39,6 +44,10 @@ function! s:suite.__table__() abort
 endfunction
 
 function! s:reconcile_test(conf) abort
+  if a:conf.skip
+    call s:assert.skip('')
+  endif
+
   call mkdir(a:conf.work_dir)
 
   let ffs = viler#testutil#FlistFs#create()
@@ -73,6 +82,8 @@ function! s:load_fixtures(root, name, work_path) abort
   return {
     \   'name': a:name,
     \   'work_dir': a:work_path,
+    \   'only': get(conf, 'only', 0),
+    \   'skip': get(conf, 'skip', 0),
     \   'before': flist_before,
     \   'after': flist_after,
     \   'drafts': drafts,
