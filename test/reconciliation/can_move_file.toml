@@ -1,0 +1,22 @@
+before = """
+hello/
+  a
+  b
+  c content:c
+"""
+
+after = """
+hello/
+  a
+  b
+  z content:c
+"""
+
+[[draft]]
+at = ""
+tree = """
+hello/
+  a
+  b
+  z from:hello/c
+"""

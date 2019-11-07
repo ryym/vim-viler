@@ -1,0 +1,20 @@
+before = """
+hello/
+  a content:a
+  b content:b
+"""
+
+after = """
+hello/
+  a content:b
+  b content:a
+"""
+
+[[draft]]
+at = ""
+tree = """
+hello/
+  a from:hello/b
+  b from:hello/a
+"""
+

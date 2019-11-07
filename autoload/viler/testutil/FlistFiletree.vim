@@ -15,8 +15,12 @@ function! s:FlistFiletree.current_dir_path() abort
 endfunction
 
 function! s:FlistFiletree.associated_node(row) abort
-  let dir = viler#Path#join(self._root_dir, a:row.dir)
-  let path = viler#Path#join(dir, a:row.name)
+  if has_key(a:row, 'src_path')
+    let path = viler#Path#join(self._root_dir, a:row.src_path)
+  else
+    let dir = viler#Path#join(self._root_dir, a:row.dir)
+    let path = viler#Path#join(dir, a:row.name)
+  endif
   return viler#Node#new(0, path)
 endfunction
 

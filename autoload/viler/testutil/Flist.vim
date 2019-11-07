@@ -96,7 +96,11 @@ function! s:decode_line(lnum, line) abort
     \ }
 
   for part in parts[1:-1]
-    if part[0:7] == 'content:'
+    if part == 'is_new'
+      let row.is_new = 1
+    elseif part[0:4] == 'from:'
+      let row.src_path = part[5:]
+    elseif part[0:7] == 'content:'
       let row.content = part[8:]
     endif
   endfor
