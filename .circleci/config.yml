@@ -9,6 +9,8 @@ jobs:
   test:
     docker:
       - image: ryym/vim-ci-themis:v8.1.2000
+    environment:
+      TOMLJSON_PATH: '.circleci/tomljson'
     steps:
       - checkout
       - run: themis --version

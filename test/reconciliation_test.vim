@@ -1,6 +1,10 @@
 let s:suite = themis#suite('Reconciliation')
 let s:assert = themis#helper('assert')
 
+" Currently we depends on tomljson binary.
+" (https://github.com/pelletier/go-toml)
+let s:tomljson_exe = exists('$TOMLJSON_PATH') ? $TOMLJSON_PATH : 'tomljson'
+
 let s:here = expand('<sfile>:h')
 let s:fixtures_root = s:here . '/reconciliation/'
 let s:work_dir = tempname()
@@ -52,7 +56,7 @@ function! s:load_fixtures(path, work_path) abort
   let tree_after = readfile(a:path . '/after.flist')
   let flist_after = viler#testutil#Flist#new(tree_after)
 
-  let draft_conf = json_decode(system('tomljson ' . a:path . '/drafts.toml'))
+  let draft_conf = s:load_toml_as_json(a:path . '/drafts.toml')
   let drafts = []
   for draft in draft_conf.draft
     let flist = viler#testutil#Flist#new(split(draft.tree, '\n'))
@@ -68,3 +72,7 @@ function! s:load_fixtures(path, work_path) abort
     \ }
 endfunction
 
+function! s:load_toml_as_json(path) abort
+  let json_str = system(s:tomljson_exe . ' ' . a:path)
+  return json_decode(json_str)
+endfunction
