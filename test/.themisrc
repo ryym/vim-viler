@@ -1,0 +1,7 @@
+" Global test utility.
+let g:t = {}
+
+function! g:t.log(...) abort
+  " https://github.com/thinca/vim-themis/issues/24
+  call themis#log(string(a:000))
+endfunction
