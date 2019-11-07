@@ -82,7 +82,9 @@ function! s:App._apply_changes(filers) abort
     call mkdir(work_dir, "p")
   endif
 
-  let drafts = map(copy(a:filers), {_, f -> viler#Draft#new(f.buffer(), self._node_store)})
+  let drafts = copy(a:filers)->map(
+    \   {_, f -> viler#Draft#from_buf(f.buffer(), self._node_store)},
+    \ )
 
   let reconciler = viler#Reconciler#new(id_gen, work_dir)
   call reconciler.reconcile(self._commit_id, drafts)
