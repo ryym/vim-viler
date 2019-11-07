@@ -168,7 +168,7 @@ function! s:make_indent(level) abort
 endfunction
 
 function! viler#Buffer#decode_node_line(whole_line) abort
-  let [indent, line] = s:split_head_tail(a:whole_line, '\v^\s*')
+  let [indent, line] = viler#lib#Str#split_head_tail(a:whole_line, '\v^\s*')
 
   let parts = split(line, '\s\+')
   if len(parts) == 0
@@ -215,22 +215,11 @@ function! s:filer_metadata(commit_id, dir_node) abort
 endfunction
 
 function! s:decode_filer_metadata(line) abort
-  let [meta, dir_path] = s:split_head_tail(a:line, '\v\|\|\d+_\d+')
+  let [meta, dir_path] = viler#lib#Str#split_head_tail(a:line, '\v\|\|\d+_\d+')
   let [commit_id, node_id] = split(meta[2:], '_')
   return {
     \   'commit_id': str2nr(commit_id),
     \   'node_id': str2nr(node_id),
     \   'path': trim(dir_path),
     \ }
-endfunction
-
-function! s:split_head_tail(str, head_pat) abort
-  let head_end = matchend(a:str, a:head_pat, 0, 1)
-  if head_end == 0 || head_end == -1
-    return ['', a:str]
-  endif
-
-  let head = a:str[0:head_end-1]
-  let tail = a:str[head_end:]
-  return [head, tail]
 endfunction
