@@ -1,14 +1,18 @@
 before = """
 hello/
   a
-  b
+  b content:b
   c content:c
+  d/
+    x content:x
 """
 
 after = """
 hello/
   a
-  b
+  d/
+    b content:b
+  x content:x
   z content:c
 """
 
@@ -17,6 +21,8 @@ at = ""
 tree = """
 hello/
   a
-  b
+  d/
+    b from:hello/b
+  x from:hello/d/x
   z from:hello/c
 """

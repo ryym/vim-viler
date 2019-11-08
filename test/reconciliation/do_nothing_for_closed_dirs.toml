@@ -1,0 +1,32 @@
+before = """
+d1/
+  a/
+d2/
+  b/
+    c content:c
+d3/
+  a/
+"""
+
+after = """
+b/
+  c content:c
+d1/
+  a/
+d2/
+  b/
+    c content:c
+d3/
+"""
+
+[[draft]]
+at = ""
+
+# For example d1/a is just not displayed. It is not deleted.
+tree = """
+d1/-
+d2/
+  b/-
+d3/
+b/- from:d2/b
+"""

@@ -1,0 +1,31 @@
+before = """
+d1/
+  a content:a
+  b
+d2/
+  x/
+    foo
+"""
+
+after = """
+d1/
+  b
+d2/
+  a content:a
+  x/
+    a content:a
+    foo
+"""
+
+[[draft]]
+at = ""
+tree = """
+d1/
+  b
+d2/
+  a from:d1/a
+  x/
+    a from:d1/a
+    foo
+"""
+

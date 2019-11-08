@@ -1,20 +1,23 @@
 before = """
-hello/
+d1/
   a
   b
-  c
+d2/
+  x
 """
 
+# d2 is unchanged.
 after = """
-hello/
-  a
+d1/
+  b
   c
+d2/
+  x
 """
 
 [[draft]]
-at = ""
+at = "d1"
 tree = """
-hello/
-  a
-  c
+b
+c is_new
 """

@@ -1,0 +1,19 @@
+before = """
+a content:a
+b content:b
+c content:c
+"""
+
+after = """
+a content:c
+b content:a
+c content:b
+"""
+
+[[draft]]
+at = ""
+tree = """
+b from:a
+c from:b
+a from:c
+"""

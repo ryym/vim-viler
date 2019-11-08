@@ -2,15 +2,16 @@ before = """
 hello/
   a
   b
-  c content:c
+  c
+  d/
+    x/
+      y
 """
 
 after = """
 hello/
   a
-  b
-  c content:c
-  c2 content:c
+  c
 """
 
 [[draft]]
@@ -18,7 +19,5 @@ at = ""
 tree = """
 hello/
   a
-  b
   c
-  c2 from:hello/c
 """

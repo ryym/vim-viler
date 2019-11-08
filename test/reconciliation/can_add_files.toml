@@ -3,6 +3,8 @@ hello/
   a
   b
   c
+  d/
+    x
 """
 
 after = """
@@ -11,6 +13,10 @@ hello/
   b
   b_new
   c
+  d/
+    v
+    x
+  foo
 """
 
 [[draft]]
@@ -21,5 +27,10 @@ hello/
   b
   c
   b_new is_new
+  c
+  d/
+    v is_new
+    x
+  foo is_new
 """
 
