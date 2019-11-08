@@ -84,6 +84,7 @@ function! s:decode_line(lnum, line) abort
   if name[last-1:last] == '/-'
     let open = 0
     let last -= 1
+    let name = name[0:-2]
   endif
   let is_dir = name[last] == '/'
 
