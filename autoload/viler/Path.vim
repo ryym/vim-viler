@@ -1,6 +1,11 @@
 function! viler#Path#join(a, b) abort
-  if a:a[len(a:a) - 1] == '/'
-    return a:a . a:b
+  let a = viler#Path#trim_slash(a:a)
+  return a:b == '' ? a : a . '/' . a:b
+endfunction
+
+function! viler#Path#trim_slash(path) abort
+  if a:path[len(a:path) - 1] == '/'
+    return a:path[0:-2]
   endif
-  return a:a . '/' . a:b
+  return a:path
 endfunction
