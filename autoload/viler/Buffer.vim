@@ -154,7 +154,9 @@ function! s:Buffer._node_to_line(node, depth, state) abort
   let tree_open = a:node.is_dir ? get(a:state, 'tree_open', 0) : 2
   let meta = join([self._nr, a:node.id, tree_open], '_')
 
-  return indent . '|' . meta . ' ' . a:node.name . (a:node.is_dir ? '/' : '')
+  " return indent . '|' . meta . ' ' . a:node.name . (a:node.is_dir ? '/' : '')
+
+  return indent . a:node.name . (a:node.is_dir ? '/' : '') . ' |' . meta
 endfunction
 
 function! s:make_indent(level) abort
@@ -170,19 +172,16 @@ endfunction
 function! viler#Buffer#decode_node_line(whole_line) abort
   let [indent, line] = viler#lib#Str#split_head_tail(a:whole_line, '\v^\s*')
 
-  let parts = split(line, '\s\+')
-  if len(parts) == 0
-    let name = ''
-    let metaline = ''
-  elseif len(parts) == 1
-    let name = parts[0]
-    let metaline = ''
+  let idx_sep = viler#lib#Str#last_index(line, ' ')
+
+  if idx_sep >= 0 && line[idx_sep + 1] == '|'
+    let name = trim(line[0:idx_sep - 1])
+    let metaline = line[idx_sep + 1:]
   else
-    let [metaline, name] = parts[:1]
+    let name = trim(line)
+    let metaline = ''
   endif
 
-  let metaline = trim(metaline)
-  let name = trim(name)
   let is_dir = len(name) > 0 && name[len(name) - 1] == '/'
 
   let row = {
@@ -210,12 +209,14 @@ function! s:decode_node_line_meta(meta) abort
 endfunction
 
 function! s:filer_metadata(commit_id, dir_node) abort
-  let meta = '||' . a:commit_id . '_' . a:dir_node.id . ' '
-  return meta . a:dir_node.abs_path()
+  let meta = ' ||' . a:commit_id . '_' . a:dir_node.id
+  return a:dir_node.abs_path() . meta
 endfunction
 
 function! s:decode_filer_metadata(line) abort
-  let [meta, dir_path] = viler#lib#Str#split_head_tail(a:line, '\v\|\|\d+_\d+')
+  let idx_sep = viler#lib#Str#last_index(a:line, ' ')
+  let meta = a:line[idx_sep + 1:]
+  let dir_path = a:line[0:idx_sep - 1]
   let [commit_id, node_id] = split(meta[2:], '_')
   return {
     \   'commit_id': str2nr(commit_id),

@@ -39,6 +39,7 @@ function! s:App.create_filer(dir) abort
   let self._filers[bufnr] = filer
 
   call filer.display(a:dir)
+  return filer
 endfunction
 
 function! s:App.open(bufnr, dir) abort

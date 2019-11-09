@@ -26,7 +26,7 @@ function! viler#open() abort
 
   call s:app.create_filer(getcwd())
 
-  setlocal conceallevel=1
+  setlocal conceallevel=2
   setlocal concealcursor=nvic
   setlocal nospell
   setlocal noswapfile
