@@ -3,22 +3,23 @@
 " manually opening a filer and editing the buffer.
 let s:FlistFiletree = {}
 
-function! viler#testutil#FlistFiletree#new(root_dir, flist) abort
+function! viler#testutil#FlistFiletree#new(root_dir, current_dir, flist) abort
   let tree = deepcopy(s:FlistFiletree)
   let tree._root_dir = a:root_dir
+  let tree._current_dir = a:current_dir
   let tree._flist = a:flist
   return tree
 endfunction
 
 function! s:FlistFiletree.current_dir_path() abort
-  return self._root_dir
+  return self._current_dir
 endfunction
 
 function! s:FlistFiletree.associated_node(row) abort
   if has_key(a:row, 'src_path')
     let path = viler#Path#join(self._root_dir, a:row.src_path)
   else
-    let dir = viler#Path#join(self._root_dir, a:row.dir)
+    let dir = viler#Path#join(self._current_dir, a:row.dir)
     let path = viler#Path#join(dir, a:row.name)
   endif
   return viler#Node#new(0, path)

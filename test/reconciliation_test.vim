@@ -65,7 +65,7 @@ function! s:reconcile_test(conf) abort
   call s:assert.equals(got.to_s(), a:conf.after.to_s())
 endfunction
 
-function! s:load_fixtures(root, name, work_path) abort
+function! s:load_fixtures(root, name, work_dir) abort
   let conf = s:load_toml_as_json(a:root . a:name . '.toml')
 
   let flist_before = viler#testutil#Flist#from_text(conf.before)
@@ -74,14 +74,14 @@ function! s:load_fixtures(root, name, work_path) abort
   let drafts = []
   for draft in conf.draft
     let flist = viler#testutil#Flist#new(split(draft.tree, '\n'))
-    let draft_root = viler#Path#join(a:work_path, draft.at)
-    let mock_tree = viler#testutil#FlistFiletree#new(draft_root, flist)
+    let current_dir = viler#Path#join(a:work_dir, draft.at)
+    let mock_tree = viler#testutil#FlistFiletree#new(a:work_dir, current_dir, flist)
     call add(drafts, viler#Draft#new(0, mock_tree))
   endfor
 
   return {
     \   'name': a:name,
-    \   'work_dir': a:work_path,
+    \   'work_dir': a:work_dir,
     \   'only': get(conf, 'only', 0),
     \   'skip': get(conf, 'skip', 0),
     \   'before': flist_before,

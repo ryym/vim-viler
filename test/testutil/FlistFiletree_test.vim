@@ -3,7 +3,7 @@ let s:assert = themis#helper('assert')
 
 function! s:suite.iter_empty() abort
   let flist = viler#testutil#Flist#new([])
-  let tree = viler#testutil#FlistFiletree#new('', flist)
+  let tree = viler#testutil#FlistFiletree#new('', '', flist)
   let iter = tree.iter()
   call s:assert.equals(iter.has_next(), 0)
 endfunction
@@ -14,7 +14,7 @@ function! s:suite.iter_flat() abort
     \   'b/',
     \   'c/',
     \ ])
-  let tree = viler#testutil#FlistFiletree#new('', flist)
+  let tree = viler#testutil#FlistFiletree#new('', '', flist)
 
   let iter = tree.iter()
   let items = [
@@ -38,7 +38,7 @@ function! s:suite.iter_nested() abort
     \   'c/',
     \   '  c-1',
     \ ])
-  let tree = viler#testutil#FlistFiletree#new('', flist)
+  let tree = viler#testutil#FlistFiletree#new('', '', flist)
 
   let names = []
   let iter = tree.iter()
