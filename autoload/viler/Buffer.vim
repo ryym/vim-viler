@@ -154,8 +154,6 @@ function! s:Buffer._node_to_line(node, depth, state) abort
   let tree_open = a:node.is_dir ? get(a:state, 'tree_open', 0) : 2
   let meta = join([self._nr, a:node.id, tree_open], '_')
 
-  " return indent . '|' . meta . ' ' . a:node.name . (a:node.is_dir ? '/' : '')
-
   return indent . a:node.name . (a:node.is_dir ? '/' : '') . ' |' . meta
 endfunction
 
