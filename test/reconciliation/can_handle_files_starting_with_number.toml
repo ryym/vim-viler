@@ -1,0 +1,22 @@
+before = """
+1_000 content:1_000
+hello/
+  1 content:1
+  2-foo
+"""
+
+after = """
+2_000 content:1_000
+hello/
+  1 content:1
+  1-2 content:1
+"""
+
+[[draft]]
+at = ""
+tree = """
+2_000 from:1_000
+hello/
+  1
+  1-2 from:hello/1
+"""
