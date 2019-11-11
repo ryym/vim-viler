@@ -24,8 +24,11 @@ endfunction
 function! s:App.create_filer(dir) abort
   let self._filer_id += 1
   let temp_file = self._work_dir . '/filer' . self._filer_id . '.viler'
+  execute 'silent edit' temp_file
+
   let buffer = viler#Buffer#new()
-  let bufnr = buffer.open(temp_file)
+  let bufnr = bufnr('%')
+  call buffer.bind(bufnr)
 
   let node_accessor = self._node_store.accessor_for(bufnr)
   let diff_checker = viler#diff#Checker#new(self._node_store)

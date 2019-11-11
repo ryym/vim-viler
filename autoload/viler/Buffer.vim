@@ -20,10 +20,8 @@ function! s:Buffer.on_leave() abort
   let self._lnum_last = line('$')
 endfunction
 
-function! s:Buffer.open(path) abort
-  execute 'silent edit' a:path
-  let self._nr = bufnr('%')
-  return self._nr
+function! s:Buffer.bind(bufnr) abort
+  let self._nr = a:bufnr
 endfunction
 
 function! s:Buffer.nr() abort
