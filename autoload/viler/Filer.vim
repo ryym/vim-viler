@@ -109,7 +109,11 @@ function! s:Filer.go_up_dir() abort
 endfunction
 
 function! s:Filer.toggle_tree() abort
-  let row = self._buf.node_row(self._buf.lnum_cursor())
+  call self.toggle_tree_at(self._buf.lnum_cursor())
+endfunction
+
+function! s:Filer.toggle_tree_at(lnum) abort
+  let row = self._buf.node_row(a:lnum)
   if !row.is_dir
     return
   endif
@@ -139,8 +143,13 @@ endfunction
 function! s:Filer._close_tree(dir_node, dir_row) abort
   let last_lnum = self._buf.lnum_last()
   let l = a:dir_row.lnum
-  while l < last_lnum
+
+  while 1
     let l += 1
+    if l > last_lnum
+      break
+    endif
+
     let row = self._buf.node_row(l)
     if row.depth <= a:dir_row.depth
       break
