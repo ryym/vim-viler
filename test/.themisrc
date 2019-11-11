@@ -5,3 +5,23 @@ function! g:t.log(...) abort
   " https://github.com/thinca/vim-themis/issues/24
   call themis#log(string(a:000))
 endfunction
+
+function! g:t.hooks() abort
+  return viler#testutil#Hooks#new()
+endfunction
+
+function! g:t.use_buffers(hooks) abort
+  let bufs = viler#testutil#Bufs#new()
+  let a:hooks.before_each.setup_bufs = function('s:buf_before_each', [bufs])
+  let a:hooks.after_each.cleanup_bufs = function('s:buf_after_each', [bufs])
+  return bufs
+endfunction
+
+function! s:buf_before_each(bufs) abort
+  call a:bufs.reset()
+endfunction
+
+function! s:buf_after_each(bufs) abort
+  call a:bufs.cleanup()
+endfunction
+
