@@ -67,6 +67,10 @@ function! s:Buffer.node_lnum(node_id) abort
   return 0
 endfunction
 
+function! s:Buffer.shown_row_count() abort
+  return self.lnum_last() - self.lnum_first() + 1
+endfunction
+
 function! s:Buffer.display_nodes(commit_id, dir_node, nodes) abort
   call setbufline(self._nr, 1, s:filer_metadata(a:commit_id, a:dir_node))
 
