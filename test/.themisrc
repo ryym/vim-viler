@@ -11,9 +11,12 @@ function! g:t.hooks() abort
 endfunction
 
 function! g:t.use_buffers(hooks) abort
-  let bufs = viler#testutil#Bufs#new()
+  let work_dir = tempname()
+  call mkdir(work_dir)
+  let bufs = viler#testutil#Bufs#new(work_dir)
   let a:hooks.before_each.setup_bufs = function('s:buf_before_each', [bufs])
   let a:hooks.after_each.cleanup_bufs = function('s:buf_after_each', [bufs])
+  let a:hooks.after.rm_work_dir = function('s:buf_after', [bufs])
   return bufs
 endfunction
 
@@ -24,4 +27,9 @@ endfunction
 function! s:buf_after_each(bufs) abort
   call a:bufs.cleanup()
 endfunction
+
+function! s:buf_after(bufs) abort
+  call delete(a:bufs.work_dir, "rf")
+endfunction
+
 

@@ -1,7 +1,8 @@
 let s:Bufs = {}
 
-function! viler#testutil#Bufs#new() abort
+function! viler#testutil#Bufs#new(work_dir) abort
   let bufs = deepcopy(s:Bufs)
+  let bufs.work_dir = a:work_dir
   let bufs._id = 0
   let bufs._bufnrs = []
   return bufs
@@ -14,7 +15,7 @@ endfunction
 
 function! s:Bufs.open() abort
   let self._id += 1
-  silent execute 'edit b' . self._id
+  silent execute 'edit' viler#Path#join(self.work_dir, self._id)
   let bufnr = bufnr('%')
   call add(self._bufnrs, bufnr)
   return bufnr
