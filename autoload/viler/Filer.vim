@@ -43,7 +43,7 @@ function! s:Filer.display(dir, opts) abort
   let rows = self.__list_children(a:dir, 0, get(a:opts, 'states', {}))
   call self._buf.display_rows(self._commit_id, dir_node, rows)
 
-  if !has_key(a:opts, 'states')
+  if !has_key(a:opts, 'states') && bufnr('%') == self._buf.nr()
     call self._buf.reset_cursor()
   endif
 
