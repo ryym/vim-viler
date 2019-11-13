@@ -144,6 +144,10 @@ function! s:Filer.toggle_tree() abort
 endfunction
 
 function! s:Filer.toggle_tree_at(lnum) abort
+  if a:lnum < self._buf.lnum_first() || self._buf.lnum_last() < a:lnum
+    return
+  endif
+
   let row = self._buf.node_row(a:lnum)
   if !row.is_dir
     return
