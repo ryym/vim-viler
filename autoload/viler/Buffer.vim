@@ -79,6 +79,10 @@ function! s:Buffer.shown_row_count() abort
 endfunction
 
 function! s:Buffer.display_rows(commit_id, dir_node, rows) abort
+  if self.modified()
+    throw '[viler] Cannot redraw modified filer'
+  endif
+
   call setbufline(self._nr, 1, s:filer_metadata(a:commit_id, a:dir_node))
 
   let lines = []
