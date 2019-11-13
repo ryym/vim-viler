@@ -13,18 +13,40 @@ function! viler#enable() abort
   let work_dir = tempname()
   call mkdir(work_dir)
   let s:app = viler#App#create(work_dir)
-
-  command! Viler call viler#open()
 endfunction
 
-function! viler#open() abort
-  let cur_bufnr = bufnr('%')
-  if s:app.has_filer_for(cur_bufnr)
-    call s:app.open(cur_bufnr, getcwd())
-    return
+function! viler#open(...) abort
+  let dir = s:normalize_dir(a:000[0])
+  let opt = get(a:000, 1, {})
+
+  " Reuse existing Filer if possible.
+  " Probably we should prioritize buffers
+  " by their last edited time.
+  for buf in getbufinfo()
+    if s:app.has_filer_for(buf.bufnr)
+      call s:app.open(buf.bufnr, dir)
+      if buf.hidden
+        if has_key(opt, 'do_before')
+          execute 'silent' opt.do_before
+        endif
+        execute 'silent buffer' buf.bufnr
+      endif
+      return
+    endif
+  endfor
+
+  call viler#open_new(dir, opt)
+endfunction
+
+function! viler#open_new(...) abort
+  let dir = s:normalize_dir(a:000[0])
+  let opt = get(a:000, 1, {})
+
+  if has_key(opt, 'do_before')
+    execute 'silent' opt.do_before
   endif
 
-  call s:app.create_filer(getcwd())
+  call s:app.create_filer(dir)
 
   setlocal conceallevel=2
   setlocal concealcursor=nvic
@@ -40,10 +62,8 @@ function! viler#open() abort
   call s:add_default_key_mappings()
 endfunction
 
-function! viler#open_vertical(width) abort
-  silent topleft vnew
-  execute 'vertical resize' a:width
-  call viler#open()
+function! s:normalize_dir(dir) abort
+  return a:dir == '' ? getcwd() : a:dir
 endfunction
 
 " TODO: Enable to configure.
