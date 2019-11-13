@@ -52,7 +52,14 @@ function! s:Buffer.reset_cursor() abort
 endfunction
 
 function! s:Buffer.save() abort
+  let cur_bufnr = bufnr('%')
+  if cur_bufnr != self._nr
+    execute 'silent keepalt buffer' self._nr
+  endif
   noautocmd silent write
+  if cur_bufnr != self._nr
+    execute 'silent keepalt buffer' cur_bufnr
+  endif
 endfunction
 
 function! s:Buffer.node_lnum(node_id) abort
