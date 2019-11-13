@@ -41,7 +41,7 @@ function! s:App.create_filer(dir) abort
     \ )
   let self._filers[bufnr] = filer
 
-  call filer.display(a:dir)
+  call filer.display(a:dir, {})
   return filer
 endfunction
 
@@ -51,7 +51,7 @@ function! s:App.open(bufnr, dir) abort
   endif
 
   let filer = self._filers[a:bufnr]
-  call filer.display(a:dir)
+  call filer.display(a:dir, {})
 endfunction
 
 function! s:App.has_filer_for(bufnr) abort

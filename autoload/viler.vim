@@ -54,6 +54,7 @@ function! s:add_default_key_mappings() abort
   nnoremap <buffer> <silent> <nowait> f :<C-u>call viler#toggle_tree()<CR>
   nnoremap <buffer> <silent> <nowait> u :<C-u>call viler#undo()<CR>
   nnoremap <buffer> <silent> <nowait> <C-r> :<C-u>call viler#redo()<CR>
+  nnoremap <buffer> <silent> <nowait> L :<C-u>call viler#refresh()<CR>
 endfunction
 
 " For debugging.
@@ -104,4 +105,8 @@ endfunction
 
 function! viler#redo() abort
   call s:current_filer().redo()
+endfunction
+
+function! viler#refresh() abort
+  call s:current_filer().refresh()
 endfunction

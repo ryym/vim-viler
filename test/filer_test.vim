@@ -37,7 +37,7 @@ function! s:open_filer(dir)
     \   diff_checker,
     \ )
 
-  call filer.display(a:dir)
+  call filer.display(a:dir, {})
   return filer
 endfunction
 
@@ -84,4 +84,25 @@ function! s:suite.toggle_tree() abort
 
   call filer.toggle_tree_at(buf.lnum_first())
   call s:assert.equals(buf.shown_row_count(), 1, 'row count when closed')
+endfunction
+
+function! s:suite.keep_buf_states_over_refresh() abort
+  call s:setup_files([
+    \   'd1/',
+    \   '  a',
+    \   'd2/',
+    \   '  b',
+    \ ])
+
+  let filer = s:open_filer(s:work_dir)
+  let buf = filer.buffer()
+  let first_lnum = buf.lnum_first()
+
+  call filer.toggle_tree_at(first_lnum)
+  call buf.put_cursor(first_lnum + 2, 2)
+  call s:assert.equals(buf.shown_row_count(), 3, 'row count before refresh')
+
+  call filer.refresh()
+  call s:assert.equals(buf.shown_row_count(), 3, 'row count after refresh')
+  call s:assert.equals(buf.lnum_cursor(), first_lnum + 2, 'cursor position')
 endfunction

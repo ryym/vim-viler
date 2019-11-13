@@ -36,46 +36,77 @@ function! s:Filer.buffer() abort
   return self._buf
 endfunction
 
-function! s:Filer.display(dir) abort
+function! s:Filer.display(dir, opts) abort
   call self._nodes.clear()
 
   let dir_node = self._nodes.make(a:dir)
-  let nodes = self._list_children(a:dir)
-  call self._buf.display_nodes(self._commit_id, dir_node, nodes)
-  call self._buf.reset_cursor()
+  let rows = self.__list_children(a:dir, 0, get(a:opts, 'states', {}))
+  call self._buf.display_rows(self._commit_id, dir_node, rows)
 
-  return {'dir': dir_node, 'nodes': nodes}
+  if !has_key(a:opts, 'states')
+    call self._buf.reset_cursor()
+  endif
+
+  return {'dir': dir_node, 'rows': rows}
 endfunction
 
 function! s:Filer.refresh() abort
-  let cur_dir = self._buf.current_dir()
-  call self.display(cur_dir.path)
-endfunction
-
-function! s:Filer._list_children(dir) abort
-  let nodes = []
-  for name in readdir(a:dir)
-    let node = self._nodes.make(viler#Path#join(a:dir, name))
-    call add(nodes, node)
-  endfor
-  return sort(nodes, function('s:sort_nodes_by_type_and_name'))
-endfunction
-
-function! s:sort_nodes_by_type_and_name(a, b) abort
-  if a:a.is_dir != a:b.is_dir
-    return a:b.is_dir - a:a.is_dir
+  if self._buf.modified()
+    throw '[viler] Cannot refresh modified buffer'
   endif
-  if a:a.name == a:b.name
+
+  let cur_dir = self._buf.current_dir()
+
+  let states = {}
+  let lnum = self._buf.lnum_first() - 1
+  let last_lnum = self._buf.lnum_last()
+  while lnum < last_lnum
+    let lnum += 1
+    let row = self._buf.node_row(lnum)
+
+    " When refreshing after saving, added rows have not corresponding node.
+    if has_key(row, 'node_id')
+      let node = self._nodes.get(row.node_id)
+      let states[node.abs_path()] = row.state
+    endif
+  endwhile
+
+  call self.display(cur_dir.path, {'states': states})
+endfunction
+
+function! s:Filer.__list_children(dir, depth, states) abort
+  let rows = []
+  for name in readdir(a:dir)
+    let row = {'depth': a:depth}
+    call add(rows, row)
+    let row.node = self._nodes.make(viler#Path#join(a:dir, name))
+    let node_path = row.node.abs_path()
+    let row.state = get(a:states, node_path, {})
+    if row.node.is_dir && get(row.state, 'tree_open', 0)
+      let row.children = self.__list_children(node_path, a:depth + 1, a:states)
+    endif
+  endfor
+
+  return sort(rows, function('s:sort_rows_by_type_and_name'))
+endfunction
+
+function! s:sort_rows_by_type_and_name(row1, row2) abort
+  let n1 = a:row1.node
+  let n2 = a:row2.node
+  if n1.is_dir != n2.is_dir
+    return n2.is_dir - n1.is_dir
+  endif
+  if n1.name == n2.name
     return 0
   endif
-  return a:a.name < a:b.name ? -1 : 1
+  return n1.name < n2.name ? -1 : 1
 endfunction
 
 function! s:Filer.open_cursor_file(cmd) abort
   let row = self._buf.node_row(self._buf.lnum_cursor())
   let node = self._nodes.get(row.node_id)
   if node.is_dir
-    call self.display(node.abs_path())
+    call self.display(node.abs_path(), {})
   else
     execute a:cmd node.abs_path()
   endif
@@ -90,12 +121,12 @@ function! s:Filer.go_up_dir() abort
     throw '[viler] Cannot leave unsaved edited directory'
   endif
 
-  let shown_nodes = self.display(dir_node.dir)
+  let result = self.display(dir_node.dir, {})
 
   let prev_dir_node_id = 0
-  for node in shown_nodes.nodes
-    if node.name == dir_node.name
-      let prev_dir_node_id = node.id
+  for row in result.rows
+    if row.node.name == dir_node.name
+      let prev_dir_node_id = row.node.id
       break
     endif
   endfor
@@ -131,7 +162,8 @@ function! s:Filer.toggle_tree_at(lnum) abort
   else
 
     call self._buf.update_node_row(node, row, {'tree_open': 1})
-    let nodes = self._list_children(node.abs_path())
+    let rows = self.__list_children(node.abs_path(), 0, {})
+    let nodes = map(rows, 'v:val.node')
     call self._buf.append_nodes(row.lnum, nodes, row.depth + 1)
   endif
 

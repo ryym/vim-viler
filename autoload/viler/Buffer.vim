@@ -71,13 +71,14 @@ function! s:Buffer.shown_row_count() abort
   return self.lnum_last() - self.lnum_first() + 1
 endfunction
 
-function! s:Buffer.display_nodes(commit_id, dir_node, nodes) abort
+function! s:Buffer.display_rows(commit_id, dir_node, rows) abort
   call setbufline(self._nr, 1, s:filer_metadata(a:commit_id, a:dir_node))
 
-  let lines = map(copy(a:nodes), {_, n -> self._node_to_line(n, 0, {})})
-  call setbufline(self._nr, 2, lines)
+  let lines = []
+  call self._rows_to_lines(a:rows, lines)
 
-  let first_line_to_remove = len(a:nodes) + 2
+  call setbufline(self._nr, 2, lines)
+  let first_line_to_remove = len(lines) + 2
   call deletebufline(self._nr, first_line_to_remove, '$')
 
   " If this buffer is hidden, `_lnum_last` could be outdated.
@@ -88,6 +89,15 @@ function! s:Buffer.display_nodes(commit_id, dir_node, nodes) abort
   endif
 
   call self.save()
+endfunction
+
+function! s:Buffer._rows_to_lines(rows, lines) abort
+  for row in a:rows
+    call add(a:lines, self._node_to_line(row.node, row.depth, row.state))
+    if has_key(row, 'children')
+      call self._rows_to_lines(row.children, a:lines)
+    endif
+  endfor
 endfunction
 
 function! s:Buffer.append_nodes(lnum, nodes, depth) abort
