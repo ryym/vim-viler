@@ -57,6 +57,12 @@ function! s:decode_lines(lines) abort
     let row = s:decode_line(lnum, line)
     call add(rows, row)
 
+    if row.name == ''
+      let lnum += 1
+      let row.dir = ''
+      continue
+    endif
+
     if row.depth > prev_depth
       call add(dirs, prev_name)
     else
@@ -78,15 +84,21 @@ endfunction
 function! s:decode_line(lnum, line) abort
   let [indent, line] = viler#lib#Str#split_head_tail(a:line, '\v^\s*')
   let parts = split(line, ' ')
-  let name = parts[0]
-  let last = len(name) - 1
+
+  let is_dir = 0
   let open = 1
-  if name[last-1:last] == '/-'
-    let open = 0
-    let last -= 1
-    let name = name[0:-2]
+  if len(parts) > 0
+    let name = parts[0]
+    let last = len(name) - 1
+    if name[last-1:last] == '/-'
+      let open = 0
+      let last -= 1
+      let name = name[0:-2]
+    endif
+    let is_dir = name[last] == '/'
+  else
+    let name = ''
   endif
-  let is_dir = name[last] == '/'
 
   let row = {
     \   'lnum': a:lnum,
