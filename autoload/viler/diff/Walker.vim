@@ -13,19 +13,25 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
   let unchanged_files = {}
 
   while a:iter.has_next()
-    if a:iter.peek().depth < a:dir.depth
+    let row = a:iter.peek()
+
+    if row.name == ''
+      call a:iter.next()
+      continue
+    endif
+
+    if row.depth < a:dir.depth
       break
     endif
 
-    let row = a:iter.next()
+    call a:iter.next()
+
     if row.depth != a:dir.depth
-      throw '[vfiler] Wierd indentation at line ' . a:iter.lnum() - 1 . ': ' . row.name
+      throw '[vfiler] Wierd indentation at line ' . string(a:iter.lnum() - 1) . ': ' . row.name
     endif
 
     if row.is_new
-      if row.name != ''
-        call a:ctx.on_new_file(a:dir, row)
-      endif
+      call a:ctx.on_new_file(a:dir, row)
       continue
     endif
 
