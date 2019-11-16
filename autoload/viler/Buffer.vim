@@ -104,15 +104,15 @@ endfunction
 
 function! s:Buffer._rows_to_lines(rows, lines) abort
   for row in a:rows
-    call add(a:lines, self._node_to_line(row.node, row.depth, row.state))
+    call add(a:lines, self._node_to_line(row.node, row.props, row.state))
     if has_key(row, 'children')
       call self._rows_to_lines(row.children, a:lines)
     endif
   endfor
 endfunction
 
-function! s:Buffer.append_nodes(lnum, nodes, depth) abort
-  let lines = map(copy(a:nodes), {_, n -> self._node_to_line(n, a:depth, {})})
+function! s:Buffer.append_nodes(lnum, nodes, props) abort
+  let lines = map(copy(a:nodes), {_, n -> self._node_to_line(n, a:props, {})})
   call append(a:lnum, lines)
 endfunction
 
@@ -137,7 +137,7 @@ function! s:Buffer.update_node_row(node, row, state_changes) abort
   for key in keys(a:state_changes)
     let state[key] = a:state_changes[key]
   endfor
-  let line = self._node_to_line(a:node, a:row.depth, state)
+  let line = self._node_to_line(a:node, a:row, state)
   call setbufline(self._nr, a:row.lnum, line)
 endfunction
 
@@ -171,11 +171,11 @@ function! s:Buffer.redo() abort
   return modified
 endfunction
 
-function! s:Buffer._node_to_line(node, depth, state) abort
-  let indent = s:make_indent(a:depth)
+function! s:Buffer._node_to_line(node, props, state) abort
+  let indent = s:make_indent(a:props.depth)
 
   let tree_open = a:node.is_dir ? get(a:state, 'tree_open', 0) : 2
-  let meta = join([self._nr, a:node.id, tree_open], '_')
+  let meta = join([self._nr, a:props.commit_id, a:node.id, tree_open], '_')
 
   return indent . a:node.name . (a:node.is_dir ? '/' : '') . ' |' . meta
 endfunction
@@ -213,9 +213,10 @@ function! viler#Buffer#decode_node_line(whole_line) abort
     \ }
 
   if metaline != ''
-    let [bufnr, node_id, state] = s:decode_node_line_meta(metaline)
+    let [bufnr, commit_id, node_id, state] = s:decode_node_line_meta(metaline)
     let row.is_new = 0
     let row.bufnr = bufnr
+    let row.commit_id = commit_id
     let row.node_id = node_id
     let row.state = state
   endif
@@ -224,9 +225,9 @@ function! viler#Buffer#decode_node_line(whole_line) abort
 endfunction
 
 function! s:decode_node_line_meta(meta) abort
-  let [bufnr, node_id, state] = split(a:meta[1:], '_')
+  let [bufnr, commit_id, node_id, state] = split(a:meta[1:], '_')
   let state = {'tree_open': str2nr(state[0])}
-  return [str2nr(bufnr), str2nr(node_id), state]
+  return [str2nr(bufnr), str2nr(commit_id), str2nr(node_id), state]
 endfunction
 
 function! s:filer_metadata(commit_id, dir_node) abort

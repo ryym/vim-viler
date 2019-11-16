@@ -19,7 +19,7 @@ function! s:Reconciler.reconcile(current_commit_id, drafts) abort
       throw "[viler] draft's state is old. Did you use undo? Undo over save is not supported."
     endif
     let diff = viler#diff#Diff#new(self._id_gen)
-    call diff_maker.gather_changes(draft.filetree, diff)
+    call diff_maker.gather_changes(a:current_commit_id, draft.filetree, diff)
     call add(diffs, diff)
   endfor
 

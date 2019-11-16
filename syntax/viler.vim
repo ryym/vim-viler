@@ -22,7 +22,7 @@ function! s:main() abort
     \ contained
   execute 'highlight VilerLineDirNameOpen' s:open_dir_highlight()
 
-  syntax match VilerLineMeta /\v\|\d+_\d+_\d$/
+  syntax match VilerLineMeta /\v\|\d+_\d+_\d+_\d$/
     \ contained
     \ conceal
 endfunction

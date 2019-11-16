@@ -7,28 +7,29 @@ function! viler#diff#Checker#new(node_store) abort
   return checker
 endfunction
 
-function! s:Checker.is_dirty(dir, buf) abort
-  let handler = s:new_handler()
+function! s:Checker.is_dirty(dir, buf, commit_id) abort
+  let ctx = s:new_walk_ctx(a:commit_id)
   let filetree = viler#Filetree#from_buf(a:buf, self._node_store)
   let start_lnum = get(a:dir, 'lnum', a:buf.lnum_first())
-  call self._walker.walk_tree(a:dir, filetree.iter_from(start_lnum), handler)
-  return handler.is_dirty
+  call self._walker.walk_tree(a:dir, filetree.iter_from(start_lnum), ctx)
+  return ctx.is_dirty
 endfunction
 
-function! s:new_handler() abort
-  let handler = deepcopy(s:Handler)
-  let handler.is_dirty = 0
-  return handler
+function! s:new_walk_ctx(commit_id) abort
+  let ctx = deepcopy(s:WalkCtx)
+  let ctx.commit_id = a:commit_id
+  let ctx.is_dirty = 0
+  return ctx
 endfunction
 
-let s:Handler = {}
+let s:WalkCtx = {}
 
-function! s:Handler.on_new_file(...) abort
+function! s:WalkCtx.on_new_file(...) abort
   let self.is_dirty = 1
 endfunction
-function! s:Handler.on_moved_file(dir, row, src) abort
+function! s:WalkCtx.on_moved_file(dir, row, src) abort
   let self.is_dirty = 1
 endfunction
-function! s:Handler.on_deleted_file(...) abort
+function! s:WalkCtx.on_deleted_file(...) abort
   let self.is_dirty = 1
 endfunction

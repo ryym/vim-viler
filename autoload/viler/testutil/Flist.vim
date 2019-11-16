@@ -55,6 +55,7 @@ function! s:decode_lines(lines) abort
 
   for line in a:lines
     let row = s:decode_line(lnum, line)
+    let row.commit_id = 0 " For now
     call add(rows, row)
 
     if row.name == ''

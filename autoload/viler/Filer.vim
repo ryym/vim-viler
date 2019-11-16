@@ -36,6 +36,22 @@ function! s:Filer.buffer() abort
   return self._buf
 endfunction
 
+function! s:Filer._get_node(node_id, commit_id) abort
+  call self._assert_valid_commit_id(a:commit_id)
+  return self._nodes.get(a:node_id)
+endfunction
+
+function! s:Filer._get_or_make_node(node_id, commit_id, path) abort
+  call self._assert_valid_commit_id(a:commit_id)
+  return self._nodes.get_or_make(a:node_id, a:path)
+endfunction
+
+function! s:Filer._assert_valid_commit_id(commit_id) abort
+  if a:commit_id != self._commit_id
+    throw '[viler] The row is outdated. You cannot copy/paste rows over saving'
+  endif
+endfunction
+
 function! s:Filer.display(dir, opts) abort
   call self._nodes.clear()
 
@@ -77,7 +93,7 @@ endfunction
 function! s:Filer._list_children(dir, depth, states) abort
   let rows = []
   for name in readdir(a:dir)
-    let row = {'depth': a:depth}
+    let row = {'props': {'depth': a:depth, 'commit_id': self._commit_id}}
     call add(rows, row)
     let row.node = self._nodes.make(viler#Path#join(a:dir, name))
     let node_path = row.node.abs_path()
@@ -108,7 +124,7 @@ function! s:Filer.open_cursor_file(cmd) abort
     throw '[viler] This file is not saved yet'
   endif
 
-  let node = self._nodes.get(row.node_id)
+  let node = self._get_node(row.node_id, row.commit_id)
   if node.is_dir
     call self.display(node.abs_path(), {})
   else
@@ -117,11 +133,11 @@ function! s:Filer.open_cursor_file(cmd) abort
 endfunction
 
 function! s:Filer.go_up_dir() abort
-  let dir_id = self._buf.current_dir().node_id
-  let dir_node = self._nodes.get(dir_id)
+  let cur_dir = self._buf.current_dir()
+  let dir_node = self._get_node(cur_dir.node_id, cur_dir.commit_id)
 
   let dir = {'path': dir_node.abs_path(), 'depth': 0}
-  if self._diff_checker.is_dirty(dir, self._buf)
+  if self._is_dirty(dir)
     throw '[viler] Cannot leave unsaved edited directory'
   endif
 
@@ -143,6 +159,10 @@ function! s:Filer.go_up_dir() abort
   endif
 endfunction
 
+function! s:Filer._is_dirty(dir) abort
+  return self._diff_checker.is_dirty(a:dir, self._buf, self._commit_id)
+endfunction
+
 function! s:Filer.toggle_tree() abort
   call self.toggle_tree_at(self._buf.lnum_cursor())
 endfunction
@@ -159,10 +179,10 @@ function! s:Filer.toggle_tree_at(lnum) abort
 
   let modified = self._buf.modified()
 
-  let node = self._nodes.get(row.node_id)
+  let node = self._get_node(row.node_id, row.commit_id)
   if row.state.tree_open
     let dir = {'lnum': row.lnum + 1, 'path': node.abs_path(), 'depth': row.depth + 1}
-    if self._diff_checker.is_dirty(dir, self._buf)
+    if self._is_dirty(dir)
       throw '[viler] Cannot close unsaved edited directory'
     endif
     call self._buf.update_node_row(node, row, {'tree_open': 0})
@@ -172,7 +192,10 @@ function! s:Filer.toggle_tree_at(lnum) abort
     call self._buf.update_node_row(node, row, {'tree_open': 1})
     let rows = self._list_children(node.abs_path(), 0, {})
     let nodes = map(rows, 'v:val.node')
-    call self._buf.append_nodes(row.lnum, nodes, row.depth + 1)
+    call self._buf.append_nodes(row.lnum, nodes, {
+      \   'commit_id': self._commit_id,
+      \   'depth': row.depth + 1,
+      \ })
   endif
 
   if !modified
@@ -241,7 +264,7 @@ endfunction
 
 function! s:Filer._restore_nodes_on_buf(prev_dir) abort
   let cur_dir = self._buf.current_dir()
-  call self._nodes.get_or_make(cur_dir.node_id, cur_dir.path)
+  call self._get_or_make_node(cur_dir.node_id, cur_dir.commit_id, cur_dir.path)
 
   let prev_dir_lnum = 0
   let prev_depth = 0
@@ -268,7 +291,7 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
     endif
 
     let file_path = viler#Path#join(dir_path, row.name)
-    call self._nodes.get_or_make(row.node_id, file_path)
+    call self._get_or_make_node(row.node_id, row.commit_id, file_path)
     let prev_depth = row.depth
     let prev_name = row.name
 

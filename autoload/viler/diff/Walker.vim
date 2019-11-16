@@ -5,8 +5,8 @@ function! viler#diff#Walker#new() abort
   return walker
 endfunction
 
-function! s:Walker.walk_tree(dir, tree_iter, handlers) abort
-  call self._walk_tree(a:dir, a:tree_iter, a:handlers)
+function! s:Walker.walk_tree(dir, tree_iter, ctx) abort
+  call self._walk_tree(a:dir, a:tree_iter, a:ctx)
 endfunction
 
 function! s:Walker._walk_tree(dir, iter, ctx) abort
@@ -33,6 +33,10 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
     if row.is_new
       call a:ctx.on_new_file(a:dir, row)
       continue
+    endif
+
+    if row.commit_id != a:ctx.commit_id
+      throw '[viler] Outdated row: ' . row.name . '. You cannot copy/paste rows over saving'
     endif
 
     let node = a:iter.filetree.associated_node(row)
