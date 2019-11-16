@@ -40,7 +40,7 @@ function! s:Filer.display(dir, opts) abort
   call self._nodes.clear()
 
   let dir_node = self._nodes.make(a:dir)
-  let rows = self.__list_children(a:dir, 0, get(a:opts, 'states', {}))
+  let rows = self._list_children(a:dir, 0, get(a:opts, 'states', {}))
   call self._buf.display_rows(self._commit_id, dir_node, rows)
 
   if !has_key(a:opts, 'states') && bufnr('%') == self._buf.nr()
@@ -74,7 +74,7 @@ function! s:Filer.refresh() abort
   call self.display(cur_dir.path, {'states': states})
 endfunction
 
-function! s:Filer.__list_children(dir, depth, states) abort
+function! s:Filer._list_children(dir, depth, states) abort
   let rows = []
   for name in readdir(a:dir)
     let row = {'depth': a:depth}
@@ -83,7 +83,7 @@ function! s:Filer.__list_children(dir, depth, states) abort
     let node_path = row.node.abs_path()
     let row.state = get(a:states, node_path, {})
     if row.node.is_dir && get(row.state, 'tree_open', 0)
-      let row.children = self.__list_children(node_path, a:depth + 1, a:states)
+      let row.children = self._list_children(node_path, a:depth + 1, a:states)
     endif
   endfor
 
@@ -170,7 +170,7 @@ function! s:Filer.toggle_tree_at(lnum) abort
   else
 
     call self._buf.update_node_row(node, row, {'tree_open': 1})
-    let rows = self.__list_children(node.abs_path(), 0, {})
+    let rows = self._list_children(node.abs_path(), 0, {})
     let nodes = map(rows, 'v:val.node')
     call self._buf.append_nodes(row.lnum, nodes, row.depth + 1)
   endif
