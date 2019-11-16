@@ -104,6 +104,10 @@ endfunction
 
 function! s:Filer.open_cursor_file(cmd) abort
   let row = self._buf.node_row(self._buf.lnum_cursor())
+  if row.is_new
+    throw '[viler] This file is not saved yet'
+  endif
+
   let node = self._nodes.get(row.node_id)
   if node.is_dir
     call self.display(node.abs_path(), {})
