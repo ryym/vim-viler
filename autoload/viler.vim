@@ -19,29 +19,6 @@ function! viler#open(...) abort
   let dir = s:normalize_dir(a:000[0])
   let opt = get(a:000, 1, {})
 
-  " Reuse existing Filer if possible.
-  " Probably we should prioritize buffers
-  " by their last edited time.
-  for buf in getbufinfo()
-    if s:app.has_filer_for(buf.bufnr)
-      call s:app.open(buf.bufnr, dir)
-      if buf.hidden
-        if has_key(opt, 'do_before')
-          execute 'silent' opt.do_before
-        endif
-        execute 'silent buffer' buf.bufnr
-      endif
-      return
-    endif
-  endfor
-
-  call viler#open_new(dir, opt)
-endfunction
-
-function! viler#open_new(...) abort
-  let dir = s:normalize_dir(a:000[0])
-  let opt = get(a:000, 1, {})
-
   if has_key(opt, 'do_before')
     execute 'silent' opt.do_before
   endif
