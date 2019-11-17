@@ -63,7 +63,7 @@ function! viler#open_new(...) abort
 endfunction
 
 function! s:normalize_dir(dir) abort
-  return a:dir == '' ? getcwd() : a:dir
+  return viler#Path#trim_slash(fnamemodify(a:dir, ':p'))
 endfunction
 
 " TODO: Enable to configure.
