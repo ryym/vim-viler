@@ -62,8 +62,13 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
   let real_files = readdir(a:dir.path)
   for name in real_files
     if !has_key(unchanged_files, name)
-      let is_dir = isdirectory(viler#Path#join(a:dir.path, name))
-      call a:ctx.on_deleted_file(a:dir, {'name': name, 'is_dir': is_dir})
+      " If a file is added in this directory outside of Viler, it must be preserved.
+      " That's why we check the path has a corresponding Node. If not, the file is
+      " added outside so we ignore it instead of marking it as deleted.
+      let path = viler#Path#join(a:dir.path, name)
+      if a:iter.filetree.has_node_for(path)
+        call a:ctx.on_deleted_file(a:dir, {'name': name, 'is_dir': isdirectory(path)})
+      endif
     endif
   endfor
 endfunction

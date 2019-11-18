@@ -17,6 +17,11 @@ function! s:Filetree.associated_node(row) abort
   return self._node_store.get_node(a:row.bufnr, a:row.node_id)
 endfunction
 
+function! s:Filetree.has_node_for(path) abort
+  let node = self._node_store.try_get_node_from_path(self._buf.nr(), a:path)
+  return type(node) != v:t_number
+endfunction
+
 function! s:Filetree.iter() abort
   return s:new_iter(self, self._buf.lnum_first())
 endfunction

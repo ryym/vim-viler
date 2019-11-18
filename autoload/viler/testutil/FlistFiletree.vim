@@ -25,6 +25,10 @@ function! s:FlistFiletree.associated_node(row) abort
   return viler#Node#new(0, path)
 endfunction
 
+function! s:FlistFiletree.has_node_for(_path) abort
+  return 1
+endfunction
+
 function! s:FlistFiletree.iter() abort
   return s:new_iter(self)
 endfunction

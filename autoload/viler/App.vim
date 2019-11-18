@@ -63,7 +63,7 @@ function! s:App.filer_for(bufnr) abort
 endfunction
 
 function! s:App.on_any_buf_save() abort
-  let filers = values(self._filers)
+  let filers = copy(values(self._filers))->filter('v:val.buffer().modified()')
 
   call self._apply_changes(filers)
   let self._commit_id += 1
