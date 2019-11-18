@@ -16,7 +16,7 @@ function! viler#enable() abort
 endfunction
 
 function! viler#open(...) abort
-  let dir = s:normalize_dir(a:000[0])
+  let dir = s:normalize_dir(get(a:000, 0, ''))
   let opt = get(a:000, 1, {})
 
   if has_key(opt, 'do_before')
