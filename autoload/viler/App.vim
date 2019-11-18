@@ -23,7 +23,7 @@ endfunction
 
 function! s:App.create_filer(dir) abort
   let self._filer_id += 1
-  let temp_file = self._work_dir . '/filer' . self._filer_id . '.viler'
+  let temp_file = self._work_dir . '/' . string(self._filer_id) . '.viler'
   execute 'silent edit' temp_file
 
   let buffer = viler#Buffer#new()
