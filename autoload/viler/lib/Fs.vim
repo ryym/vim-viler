@@ -3,7 +3,7 @@ let s:Fs = {}
 " TODO: Do error handling.
 " TODO: Add logging.
 
-function! viler#Fs#new() abort
+function! viler#lib#Fs#new() abort
   let fs = deepcopy(s:Fs)
   return fs
 endfunction

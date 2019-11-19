@@ -4,7 +4,7 @@
 let s:FlistFs = {}
 
 function! viler#testutil#FlistFs#create() abort
-  let fs = viler#Fs#new()
+  let fs = viler#lib#Fs#new()
   return viler#testutil#FlistFs#new(fs)
 endfunction
 

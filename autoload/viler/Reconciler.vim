@@ -5,7 +5,7 @@ function! viler#Reconciler#new(id_gen, work_dir_path) abort
   let reconciler._id_gen = a:id_gen
   let reconciler._unifier = viler#diff#Unifier#new(a:id_gen)
   let reconciler._validator = viler#diff#Validator#new()
-  let reconciler._fs = viler#Fs#new()
+  let reconciler._fs = viler#lib#Fs#new()
   let reconciler._work_dir_path = a:work_dir_path
   return reconciler
 endfunction
