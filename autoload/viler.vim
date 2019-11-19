@@ -51,6 +51,7 @@ function! s:add_default_key_mappings() abort
   nnoremap <buffer> <silent> <nowait> f :<C-u>call viler#toggle_tree()<CR>
   nnoremap <buffer> <silent> <nowait> u :<C-u>call viler#undo()<CR>
   nnoremap <buffer> <silent> <nowait> <C-r> :<C-u>call viler#redo()<CR>
+  nnoremap <buffer> <silent> <nowait> . :<C-u>call viler#toggle_dotfiles()<CR>
   nnoremap <buffer> <silent> <nowait> L :<C-u>call viler#refresh()<CR>
 endfunction
 
@@ -106,4 +107,11 @@ endfunction
 
 function! viler#refresh() abort
   call s:current_filer().refresh()
+endfunction
+
+function! viler#toggle_dotfiles() abort
+  let filer = s:current_filer()
+  let conf = filer.config()
+  call filer.modify_config({'show_dotfiles': !conf.show_dotfiles})
+  call filer.refresh()
 endfunction

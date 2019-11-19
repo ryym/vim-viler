@@ -7,6 +7,7 @@ function! viler#Filer#new(commit_id, buf, node_accessor, dirty_checker) abort
   let filer._diff_checker = a:dirty_checker
   let filer._commit_id = a:commit_id
   let filer._commit_state = {'undo_seq_last': 0}
+  let filer._config = {'show_dotfiles': 0}
   return filer
 endfunction
 
@@ -66,6 +67,16 @@ function! s:Filer.display(dir, opts) abort
   return {'dir': dir_node, 'rows': rows}
 endfunction
 
+function! s:Filer.config() abort
+  return self._config
+endfunction
+
+function! s:Filer.modify_config(conf) abort
+  for key in keys(a:conf)
+    let self._config[key] = a:conf[key]
+  endfor
+endfunction
+
 function! s:Filer.refresh() abort
   if self._buf.modified()
     throw '[viler] Cannot refresh modified buffer'
@@ -91,8 +102,12 @@ function! s:Filer.refresh() abort
 endfunction
 
 function! s:Filer._list_children(dir, depth, states) abort
+  let show_dotfiles = self._config.show_dotfiles
   let rows = []
   for name in readdir(a:dir)
+    if !show_dotfiles && name[0] == '.'
+      continue
+    endif
     let row = {'props': {'depth': a:depth, 'commit_id': self._commit_id}}
     call add(rows, row)
     let row.node = self._nodes.make(viler#Path#join(a:dir, name))
