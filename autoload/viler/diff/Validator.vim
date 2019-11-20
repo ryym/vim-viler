@@ -52,7 +52,7 @@ function! s:Validator.validate_dirty_nests(diff) abort
   let errs = {}
   for op in values(a:diff.dirops)
     for dir in dirty_dirs
-      let is_ancestor = op.path == dir || stridx(op.path, dir . '/') == 0
+      let is_ancestor = op.path is# dir || stridx(op.path, dir . '/') == 0
       if is_ancestor
         let errs[dir] = 'It is not supported yet to edit files inside of edited directory'
       endif
@@ -69,7 +69,7 @@ function! s:Validator._find_duplicate_dests(moves) abort
     let srcs = get(dest2srcs, move.dest_path, {})
     let srcs[move.src_path] = 1
     let dest2srcs[move.dest_path] = srcs
-    if len(srcs) == 2
+    if len(srcs) is# 2
       call add(dups, move.dest_path)
     endif
   endfor

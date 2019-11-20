@@ -53,11 +53,11 @@ endfunction
 
 function! s:Buffer.save() abort
   let cur_bufnr = bufnr('%')
-  if cur_bufnr != self._nr
+  if cur_bufnr isnot# self._nr
     execute 'silent keepalt buffer' self._nr
   endif
   noautocmd silent write
-  if cur_bufnr != self._nr
+  if cur_bufnr isnot# self._nr
     execute 'silent keepalt buffer' cur_bufnr
   endif
 endfunction
@@ -67,7 +67,7 @@ function! s:Buffer.node_lnum(node_id) abort
   while l < self.lnum_last()
     let l += 1
     let row = self.node_row(l)
-    if row.node_id == a:node_id
+    if row.node_id is# a:node_id
       return l
     endif
   endwhile
@@ -195,7 +195,7 @@ function! viler#Buffer#decode_node_line(whole_line) abort
 
   let idx_sep = viler#lib#Str#last_index(line, ' ')
 
-  if idx_sep >= 0 && line[idx_sep + 1] == '|'
+  if idx_sep >=# 0 && line[idx_sep + 1] is# '|'
     let name = trim(line[0:idx_sep - 1])
     let metaline = line[idx_sep + 1:]
   else
@@ -203,7 +203,7 @@ function! viler#Buffer#decode_node_line(whole_line) abort
     let metaline = ''
   endif
 
-  let is_dir = len(name) > 0 && name[len(name) - 1] == '/'
+  let is_dir = len(name) > 0 && name[len(name) - 1] is# '/'
 
   let row = {
     \   'name': is_dir ? name[0:-2] : name,
@@ -212,7 +212,7 @@ function! viler#Buffer#decode_node_line(whole_line) abort
     \   'is_new': 1,
     \ }
 
-  if metaline != ''
+  if metaline isnot# ''
     let [bufnr, commit_id, node_id, state] = s:decode_node_line_meta(metaline)
     let row.is_new = 0
     let row.bufnr = bufnr

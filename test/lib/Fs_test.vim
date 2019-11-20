@@ -53,7 +53,7 @@ function! s:suite.readdir_by_glob_filter() abort
     \ ])
   let names = viler#lib#Fs#readdir_by_glob(
     \   self._work_dir,
-    \   {_idx, name -> len(name) <= 4}
+    \   {_idx, name -> len(name) <=# 4}
     \ )
   let want = ['app', 'dist', 'z']
   call s:assert.equals(names, want)

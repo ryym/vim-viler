@@ -30,7 +30,7 @@ function! s:HookSet.__list_funcs() abort
   let fs = []
   for key in keys(self)
     let F = self[key]
-    if type(F) == v:t_func && key[0:1] != '__'
+    if type(F) is# v:t_func && key[0:1] isnot# '__'
       call add(fs, F)
     endif
   endfor

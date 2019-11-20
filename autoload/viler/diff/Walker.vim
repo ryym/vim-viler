@@ -15,7 +15,7 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
   while a:iter.has_next()
     let row = a:iter.peek()
 
-    if row.name == ''
+    if row.name is# ''
       call a:iter.next()
       continue
     endif
@@ -26,7 +26,7 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
 
     call a:iter.next()
 
-    if row.depth != a:dir.depth
+    if row.depth isnot# a:dir.depth
       throw '[vfiler] Wierd indentation at line ' . string(a:iter.lnum() - 1) . ': ' . row.name
     endif
 
@@ -35,7 +35,7 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
       continue
     endif
 
-    if row.commit_id != a:ctx.commit_id
+    if row.commit_id isnot# a:ctx.commit_id
       throw '[viler] Outdated row: ' . row.name . '. You cannot copy/paste rows over saving'
     endif
 

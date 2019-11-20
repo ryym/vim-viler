@@ -62,7 +62,7 @@ endfunction
 
 function! s:current_filer() abort
   let filer = s:app.filer_for(bufnr('%'))
-  if type(filer) == v:t_number
+  if type(filer) is# v:t_number
     throw '[viler] This buffer is not a file explorer'
   endif
   return filer
@@ -70,7 +70,7 @@ endfunction
 
 function! viler#on_buf_enter() abort
   let filer = s:app.filer_for(bufnr('%'))
-  if type(filer) == v:t_number
+  if type(filer) is# v:t_number
     return
   endif
   call filer.on_buf_enter()

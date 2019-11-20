@@ -68,7 +68,7 @@ function! s:count_dirs(path) abort
   let size = strchars(a:path)
   let i = 0
   while i < size
-    if strcharpart(a:path, i, 1) == '/'
+    if strcharpart(a:path, i, 1) is# '/'
       let cnt += 1
     endif
     let i += 1

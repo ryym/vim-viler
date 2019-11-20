@@ -3,7 +3,7 @@ setlocal indentkeys=o,O
 setlocal shiftwidth=2
 
 function! viler#get_indent() abort
-  if v:lnum == 1
+  if v:lnum is# 1
     return 0
   endif
 

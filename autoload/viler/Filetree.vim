@@ -19,7 +19,7 @@ endfunction
 
 function! s:Filetree.has_node_for(path) abort
   let node = self._node_store.try_get_node_from_path(self._buf.nr(), a:path)
-  return type(node) != v:t_number
+  return type(node) isnot# v:t_number
 endfunction
 
 function! s:Filetree.iter() abort
@@ -41,7 +41,7 @@ function! s:new_iter(filetree, start_lnum) abort
 endfunction
 
 function! s:Iter.has_next() abort
-  return self._lnum <= self._lnum_last
+  return self._lnum <=# self._lnum_last
 endfunction
 
 function! s:Iter.lnum() abort

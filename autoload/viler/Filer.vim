@@ -48,7 +48,7 @@ function! s:Filer._get_or_make_node(node_id, commit_id, path) abort
 endfunction
 
 function! s:Filer._assert_valid_commit_id(commit_id) abort
-  if a:commit_id != self._commit_id
+  if a:commit_id isnot# self._commit_id
     throw '[viler] The row is outdated. You cannot copy/paste rows over saving'
   endif
 endfunction
@@ -60,7 +60,7 @@ function! s:Filer.display(dir, opts) abort
   let rows = self._list_children(a:dir, 0, get(a:opts, 'states', {}))
   call self._buf.display_rows(self._commit_id, dir_node, rows)
 
-  if !has_key(a:opts, 'states') && bufnr('%') == self._buf.nr()
+  if !has_key(a:opts, 'states') && bufnr('%') is# self._buf.nr()
     call self._buf.reset_cursor()
   endif
 
@@ -105,7 +105,7 @@ function! s:Filer._list_children(dir, depth, states) abort
   let show_dotfiles = self._config.show_dotfiles
   let rows = []
   for name in viler#lib#Fs#readdir(a:dir)
-    if !show_dotfiles && name[0] == '.'
+    if !show_dotfiles && name[0] is# '.'
       continue
     endif
     let row = {'props': {'depth': a:depth, 'commit_id': self._commit_id}}
@@ -124,10 +124,10 @@ endfunction
 function! s:sort_rows_by_type_and_name(row1, row2) abort
   let n1 = a:row1.node
   let n2 = a:row2.node
-  if n1.is_dir != n2.is_dir
+  if n1.is_dir isnot# n2.is_dir
     return n2.is_dir - n1.is_dir
   endif
-  if n1.name == n2.name
+  if n1.name is# n2.name
     return 0
   endif
   return n1.name < n2.name ? -1 : 1
@@ -160,7 +160,7 @@ function! s:Filer.go_up_dir() abort
 
   let prev_dir_node_id = 0
   for row in result.rows
-    if row.node.name == dir_node.name
+    if row.node.name is# dir_node.name
       let prev_dir_node_id = row.node.id
       break
     endif
@@ -229,7 +229,7 @@ function! s:Filer._close_tree(dir_node, dir_row) abort
     endif
 
     let row = self._buf.node_row(l)
-    if row.depth <= a:dir_row.depth
+    if row.depth <=# a:dir_row.depth
       break
     endif
     call self._nodes.remove(row.node_id)
@@ -250,7 +250,7 @@ function! s:Filer.undo() abort
 
   " Currently we do not support undo over commit.
   let curhead = self._buf.undotree_curhead()
-  if curhead.seq <= self._commit_state.undo_seq_last
+  if curhead.seq <=# self._commit_state.undo_seq_last
     return
   endif
 
@@ -310,7 +310,7 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
     let prev_depth = row.depth
     let prev_name = row.name
 
-    if file_path == a:prev_dir.path
+    if file_path is# a:prev_dir.path
       let prev_dir_lnum = l
     endif
   endwhile

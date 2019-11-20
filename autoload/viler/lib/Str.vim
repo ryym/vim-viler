@@ -3,7 +3,7 @@
 " The unmatched part of string becomes a tail.
 function! viler#lib#Str#split_head_tail(str, head_pat) abort
   let head_end = matchend(a:str, a:head_pat, 0, 1)
-  if head_end == 0 || head_end == -1
+  if head_end is# 0 || head_end is# -1
     return ['', a:str]
   endif
 
@@ -18,7 +18,7 @@ function! viler#lib#Str#last_index(str, char) abort
   let i = len(a:str)
   while 0 < i
     let i -= 1
-    if a:str[i] == a:char
+    if a:str[i] is# a:char
       return i
     endif
   endwhile

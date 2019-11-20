@@ -36,7 +36,7 @@ function! s:Flist.get(lnum) abort
 endfunction
 
 function! s:Flist.to_s() abort
-  if self.len() == 0
+  if self.len() is# 0
     return ''
   endif
   return "\n" . copy(self._rows)->map({_, r -> s:row_to_s(r)})->join("\n") . "\n"
@@ -58,7 +58,7 @@ function! s:decode_lines(lines) abort
     let row.commit_id = 0 " For now
     call add(rows, row)
 
-    if row.name == ''
+    if row.name is# ''
       let lnum += 1
       let row.dir = ''
       continue
@@ -91,12 +91,12 @@ function! s:decode_line(lnum, line) abort
   if len(parts) > 0
     let name = parts[0]
     let last = len(name) - 1
-    if name[last-1:last] == '/-'
+    if name[last-1:last] is# '/-'
       let open = 0
       let last -= 1
       let name = name[0:-2]
     endif
-    let is_dir = name[last] == '/'
+    let is_dir = name[last] is# '/'
   else
     let name = ''
   endif
@@ -110,11 +110,11 @@ function! s:decode_line(lnum, line) abort
     \ }
 
   for part in parts[1:-1]
-    if part == 'is_new'
+    if part is# 'is_new'
       let row.is_new = 1
-    elseif part[0:4] == 'from:'
+    elseif part[0:4] is# 'from:'
       let row.src_path = part[5:]
-    elseif part[0:7] == 'content:'
+    elseif part[0:7] is# 'content:'
       let row.content = part[8:]
     else
       throw '[Flist] Unknown attribute ' . part

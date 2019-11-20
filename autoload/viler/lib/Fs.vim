@@ -26,7 +26,7 @@ function! viler#lib#Fs#readdir_by_glob(...) abort
 
   for path in glob(dir . '/.*', 1, 1)
     let name = strcharpart(path, prefix_len)
-    if name != '.' && name != '..'
+    if name isnot# '.' && name isnot# '..'
       call add(names, name)
     endif
   endfor
