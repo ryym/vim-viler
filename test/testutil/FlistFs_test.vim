@@ -26,7 +26,7 @@ function! s:suite.flist_to_files_and_vice_verca() abort
   let fs = viler#testutil#FlistFs#create()
   call fs.flist_to_files(self._work_dir, flist)
 
-  let file_names = readdir(self._work_dir . '/hello')
+  let file_names = viler#lib#Fs#readdir(self._work_dir . '/hello')
   call s:assert.equals(file_names, ['a', 'b', 'c', 'd'])
 
   let made = fs.files_to_flist(self._work_dir)

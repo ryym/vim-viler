@@ -59,7 +59,7 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
     endif
   endwhile
 
-  let real_files = readdir(a:dir.path)
+  let real_files = viler#lib#Fs#readdir(a:dir.path)
   for name in real_files
     if !has_key(unchanged_files, name)
       " If a file is added in this directory outside of Viler, it must be preserved.

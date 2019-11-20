@@ -104,7 +104,7 @@ endfunction
 function! s:Filer._list_children(dir, depth, states) abort
   let show_dotfiles = self._config.show_dotfiles
   let rows = []
-  for name in readdir(a:dir)
+  for name in viler#lib#Fs#readdir(a:dir)
     if !show_dotfiles && name[0] == '.'
       continue
     endif

@@ -49,7 +49,7 @@ function! s:FlistFs.files_to_flist(dir) abort
 endfunction
 
 function! s:FlistFs._files_to_flist(dir, rows, depth) abort
-  let children = readdir(a:dir)
+  let children = viler#lib#Fs#readdir(a:dir)
   for name in children
     let path = viler#Path#join(a:dir, name)
     let is_dir = isdirectory(path)

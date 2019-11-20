@@ -23,7 +23,7 @@ endfunction
 function! s:suite.__table__() abort
   let suite = themis#suite('table')
 
-  let names = readdir(s:fixtures_root)
+  let names = viler#lib#Fs#readdir(s:fixtures_root)
   let confs = []
   for name in names
     let name = fnamemodify(name, ':r')
