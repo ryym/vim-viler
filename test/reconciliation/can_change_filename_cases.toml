@@ -1,0 +1,21 @@
+# At first we used `==` to compare two paths and it causes the problem
+# when you change only the cases of filename (.e.g. abc -> Abc).
+# Then we added this test case as a regression test, but this test passes
+# without any fixes. We assume this is because the 'ignorecase' option is off
+# during the test but `set ignorecase` does not work.
+# Anyway, we remain this test.
+
+before = """
+abc content:abc
+"""
+
+after = """
+Abc content:abc
+"""
+
+[[draft]]
+at = ""
+tree = """
+Abc from:abc
+"""
+

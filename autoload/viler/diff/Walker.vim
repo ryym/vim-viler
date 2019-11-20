@@ -43,7 +43,7 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
     let row_path = viler#Path#join(a:dir.path, row.name)
     let src_path = node.abs_path()
 
-    if src_path == row_path
+    if src_path is# row_path
       let unchanged_files[row.name] = 1
       if row.is_dir && row.state.tree_open
         let dir = s:next_dir_ctx(a:dir, src_path)
