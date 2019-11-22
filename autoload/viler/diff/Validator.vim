@@ -73,7 +73,7 @@ function! s:Validator._find_duplicate_dests(moves) abort
       call add(dups, move.dest_path)
     endif
   endfor
-  return dups->map({_, d -> {'dest_path': d, 'src_paths': keys(dest2srcs[d])}})
+  return map(dups, {_, d -> {'dest_path': d, 'src_paths': keys(dest2srcs[d])}})
 endfunction
 
 function! s:Validator.validate_dir_contents(diff) abort
@@ -105,7 +105,7 @@ function! s:Validator._validate_dirop(diff, op, errs) abort
     call remove(files, path)
   endfor
 
-  let added_files = copy(a:op.add)->map('v:val.path')
+  let added_files = map(copy(a:op.add), 'v:val.path')
   for move_id in a:op.move_from
     let move = a:diff.moves[move_id]
     call add(added_files, move.dest_path)

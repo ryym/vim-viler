@@ -39,7 +39,8 @@ function! s:Flist.to_s() abort
   if self.len() is# 0
     return ''
   endif
-  return "\n" . copy(self._rows)->map({_, r -> s:row_to_s(r)})->join("\n") . "\n"
+  let s_rows = map(copy(self._rows), {_, r -> s:row_to_s(r)})
+  return "\n" . join(s_rows, "\n") . "\n"
 endfunction
 
 function! s:Flist.iter() abort

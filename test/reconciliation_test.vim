@@ -32,7 +32,7 @@ function! s:suite.__table__() abort
     call add(confs, conf)
   endfor
 
-  let only_targets = copy(confs)->filter({_, c -> c.only})
+  let only_targets = filter(copy(confs), {_, c -> c.only})
   if len(only_targets) > 0
     let confs = only_targets
   endif

@@ -63,7 +63,7 @@ function! s:App.filer_for(bufnr) abort
 endfunction
 
 function! s:App.on_any_buf_save() abort
-  let filers = copy(values(self._filers))->filter('v:val.buffer().modified()')
+  let filers = filter(copy(values(self._filers)), 'v:val.buffer().modified()')
 
   call self._apply_changes(filers)
   let self._commit_id += 1
@@ -86,7 +86,8 @@ function! s:App._apply_changes(filers) abort
     call mkdir(work_dir, "p")
   endif
 
-  let drafts = copy(a:filers)->map(
+  let drafts = map(
+    \   copy(a:filers),
     \   {_, f -> viler#Draft#from_buf(f.buffer(), self._node_store)},
     \ )
 

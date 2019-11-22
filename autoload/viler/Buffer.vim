@@ -83,14 +83,15 @@ function! s:Buffer.display_rows(commit_id, dir_node, rows) abort
     throw '[viler] Cannot redraw modified filer'
   endif
 
-  call setbufline(self._nr, 1, s:filer_metadata(a:commit_id, a:dir_node))
+  call viler#lib#Buf#set_lines(self._nr, 1, [s:filer_metadata(a:commit_id, a:dir_node)])
 
   let lines = []
   call self._rows_to_lines(a:rows, lines)
 
-  call setbufline(self._nr, 2, lines)
+  call viler#lib#Buf#set_lines(self._nr, 2, lines)
+
   let first_line_to_remove = len(lines) + 2
-  call deletebufline(self._nr, first_line_to_remove, '$')
+  call viler#lib#Buf#delete_lines(self._nr, first_line_to_remove, line('$'))
 
   " If this buffer is hidden, `_lnum_last` could be outdated.
   " For example, another filer may delete a file in a directory
@@ -117,7 +118,7 @@ function! s:Buffer.append_nodes(lnum, nodes, props) abort
 endfunction
 
 function! s:Buffer.delete_lines(first, last) abort
-  call deletebufline(self._nr, a:first, a:last)
+  call viler#lib#Buf#delete_lines(self._nr, a:first, a:last)
 endfunction
 
 function! s:Buffer.current_dir() abort
@@ -138,7 +139,7 @@ function! s:Buffer.update_node_row(node, row, state_changes) abort
     let state[key] = a:state_changes[key]
   endfor
   let line = self._node_to_line(a:node, a:row, state)
-  call setbufline(self._nr, a:row.lnum, line)
+  call viler#lib#Buf#set_lines(self._nr, a:row.lnum, [line])
 endfunction
 
 function! s:Buffer.modified() abort
