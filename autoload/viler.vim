@@ -36,23 +36,17 @@ function! viler#open(...) abort
     setlocal nobuflisted
   endif
 
-  call s:add_default_key_mappings()
+  call s:define_default_key_mappings()
 endfunction
 
 function! s:normalize_dir(dir) abort
   return viler#Path#trim_slash(fnamemodify(a:dir, ':p'))
 endfunction
 
-" TODO: Enable to configure.
-function! s:add_default_key_mappings() abort
-  nnoremap <buffer><silent><nowait> <C-l> :<C-u>call viler#open_cursor_file()<CR>
-  nnoremap <buffer> <silent> <nowait> <C-h> :<C-u>call viler#go_up_dir()<CR>
-  nnoremap <buffer> <silent> <nowait> <C-j> :<C-u>call viler#toggle_tree()<CR>
-  nnoremap <buffer> <silent> <nowait> f :<C-u>call viler#toggle_tree()<CR>
-  nnoremap <buffer> <silent> <nowait> u :<C-u>call viler#undo()<CR>
-  nnoremap <buffer> <silent> <nowait> <C-r> :<C-u>call viler#redo()<CR>
-  nnoremap <buffer> <silent> <nowait> . :<C-u>call viler#toggle_dotfiles()<CR>
-  nnoremap <buffer> <silent> <nowait> L :<C-u>call viler#refresh()<CR>
+function! s:define_default_key_mappings() abort
+  " TODO: Allow to disable.
+  nmap <buffer> <silent> <nowait> u <Plug>(viler-undo)
+  nmap <buffer> <silent> <nowait> <C-r> <Plug>(viler-redo)
 endfunction
 
 " For debugging.
