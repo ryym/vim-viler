@@ -109,3 +109,22 @@ function! viler#toggle_dotfiles() abort
   call filer.modify_config({'show_dotfiles': !conf.show_dotfiles})
   call filer.refresh()
 endfunction
+
+function! viler#delete_old_backups() abort
+  let backup_period_days = 14
+  let work_dir = viler#App#reconciliation_work_dir()
+  let date_secs = 60 * 60 * 24
+  let now = localtime()
+
+  let fs = viler#lib#Fs#new()
+  for dir in viler#lib#Fs#readdir(work_dir)
+    let creation_time = str2nr(dir)
+    if creation_time == 0
+      continue " Unknown directory.
+    endif
+    let days_elapsed = (now - creation_time) / date_secs
+    if days_elapsed > backup_period_days
+      call fs.delete_file(viler#Path#join(work_dir, dir))
+    endif
+  endfor
+endfunction

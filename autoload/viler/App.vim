@@ -21,6 +21,10 @@ function! viler#App#new(work_dir, node_store) abort
   return app
 endfunction
 
+function! viler#App#reconciliation_work_dir() abort
+  return $HOME . '/.viler/apply'
+endfunction
+
 function! s:App.create_filer(dir) abort
   let self._filer_id += 1
   let temp_file = self._work_dir . '/' . string(self._filer_id) . '.viler'
@@ -81,7 +85,7 @@ endfunction
 function! s:App._apply_changes(filers) abort
   let id_gen = viler#IdGen#new()
 
-  let work_dir = $HOME . '/.viler/apply'
+  let work_dir = viler#App#reconciliation_work_dir()
   if !isdirectory(work_dir)
     call mkdir(work_dir, "p")
   endif
