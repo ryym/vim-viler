@@ -1,7 +1,287 @@
-vim-viler*		Editable file explorer
+*viler.txt*	Editable file explorer
 
 Version: 0.0.1
-Author: ryym <ryym64@gmail.com>
-License: MIT
+Author: ryym <ryym.64@gmail.com>
 
-TODO: Write help document.
+==============================================================================
+CONTENTS						*viler-contents*
+
+Introduction		|viler-introduction|
+Features		|viler-features|
+Requirements		|viler-requirements|
+Usage			|viler-usage|
+Editing Rules		|viler-rules|
+Key mappings		|viler-key-mappings|
+Functions		|viler-functions|
+Trouble shooting	|viler-trouble-shooting|
+Changelog		|viler-changelog|
+
+
+==============================================================================
+INTRODUCTION						*viler-introduction*
+
+*Viler* is a file explorer plugin for Vim, with an ability of editing
+file structures by hand.
+
+Repository: https://github.com/ryym/vim-viler
+
+Unlike the other file explorer plugins, a filer - a buffer for browsing files -
+is editable in Viler.
+You can add/copy/move/delete files just by adding/copying/moving/deleting lines.
+When you save the buffer Viler applies your modification to the actual file system.
+That is, you can operate files in the same way as usual text editing!
+
+
+==============================================================================
+FEATURES						*viler-features*
+
+- Editable
+- Tree view
+- Multi window support
+
+
+==============================================================================
+REQUIREMENTS						*viler-requirements*
+
+Viler is tested on:
+
+- Vim 8.1
+- Neovim 0.4.2
+
+
+==============================================================================
+USAGE							*viler-usage*
+
+File browsing:
+	- Open a filer buffer by |viler#open|.
+	- Use |viler-key-mappings| to view files
+	  (e.g. change directory, open/close tree, etc).
+
+Editing:
+	Edit files as you like:
+
+	- add a line to add a file.
+	- copy/move a line to copy/move a file.
+	- delete a line to delete a file.
+
+	And save the changes (:w) to apply your modification.
+	Note that you should follow |viler-rules| for editing.
+
+
+==============================================================================
+EDITING RULES						*viler-rules*
+
+There are some rules and limitations for editing file structures.
+Please keep them in mind when using Viler.
+
+Rules:
+	Be careful, saving the edited filer with violating these rules could result
+	in an unexpected behavior.
+
+	- Do not edit the concealed part at the end of each line. By default
+	  they are invisible so it looks like some spaces exist at the end of line.
+	  Please keep them as is. They contain some metadata.
+	- Do not edit the first line of filer. It contains some metadata.
+
+	See |viler-rule-metadata| for details.
+
+Limitations:
+	Viler prohibit these operations and show error message when you try to violate
+	them. Some of these limitations may be eliminated in future.
+
+	- You must use proper indentation		|viler-rule-indentation|
+	- You cannot close/hide edited directory	|viler-rule-edited-dir-open|
+	- You cannot edit content of unsaved directory	|viler-rule-no-nest-edit|
+	- You cannot undo/redo over saving		|viler-rule-no-undo-over-save|
+	- You must save all filers simultaneously	|viler-rule-save-all-at-once|
+
+------------------------------------------------------------------------------
+Rule: Do not touch Metadata				*viler-rule-metadata*
+
+Viler embeds some metadata in filer using Vim's |conceal| feature, at the
+first line of the filer and the end of each line.
+
+Image:
+>
+	1| [metadata]
+	2| app/ [metadata]
+	3|   controllers/ [metadata]
+	4| config/ [metadata]
+	5|   database.yml [metadata]
+	6| Gemfile [metadata]
+<
+This is why you can copy/move files just by yanking/pasting lines.
+When you yank a line, it copies metadata about the line as well (e.g.
+the absolute path of the file, whether it is a directory or not, etc).
+
+This means Viler cannot apply your changes correctly if the metadata is broken.
+Therefore,
+
+- Yank whole line to copy/move a file (to copy its metadata as well).
+
+- Yank filename only when you want to copy the text of filename, not the file itself.
+
+- Do not delete the line when you want to rename a file. For example you must
+  not use |C|, d|$|, etc to rename a file. If you use them and remove the metadata,
+  Viler deletes the file and create a new empty file instead of renaming it.
+  In future, we are planning to override these basic key mappings by default
+  not to delete metadata at the end of line accidentally.
+
+------------------------------------------------------------------------------
+Rule: Use proper indentation				*viler-rule-indentation*
+
+Viler has a strict indentation rule:
+
+when a directory is open and it has some files, these files must be indented
+further in than the directory.
+
+	Good: >
+	  autoload/
+	    viler/
+	    viler.vim
+	  plugin/
+	    viler.vim
+<
+	Good (closed directory): >
+	  autoload/
+	  plugin/
+<
+	Bad (incorrect indentation): >
+	  autoload/
+	    viler/
+	  viler.vim  <=
+	  plugin/
+	      viler.vim  <=
+<
+
+When you add a new line (new file or copied/moved file), it must follow this
+indentation rules.
+
+- If you add a line inside of a directory, use the same indentation
+  as the other files in that directory.
+- If you add a line inside of an empty directory, indent the line one level
+  deeper than the directory.
+
+The indentation width is 2 spaces in Viler and the top level files has no
+indentation. Currently you cannot change the indentation width.
+
+------------------------------------------------------------------------------
+Rule: Keep edited directory open			*viler-rule-edited-dir-open*
+
+When you edit the content of a directory, the directory must be open until you
+save. In other words,
+
+- You cannot close the edited directory
+- If there are some changes in the filer,
+	- You cannot change the directory displayed in the filer
+	- You cannot refresh the content of the filer
+
+If you want to copy/move a file to somewhere that is not displayed in the
+filer, open another filer and paste the line into that. You can copy/move files
+over filers.
+
+------------------------------------------------------------------------------
+Rule: No nested editing					*viler-rule-no-nest-edit*
+
+Currently Viler does not support editing a content of unsaved directory.
+Thus you cannot:
+
+- add a file inside of a new directory you added or copied/moved from somewhere.
+- copy/move an edited directory to somewhere.
+
+So if you want to do that please save the edited directory first.
+
+------------------------------------------------------------------------------
+Rule: Save all filers simultaneously			*viler-rule-save-all-at-once*
+
+In Viler, you can open multiple filers.
+This is mainly for copying/moving files over two filers. For example,
+
+>
+	foo/    |  bar/
+	  a     |    d
+	  b     |
+	  c     |
+<
+
+To move b and c from foo/ to bar/, just delete them and paste inside of bar/.
+
+>
+	foo/    |  bar/
+	  a     |    d
+	        |    b
+	        |    c
+<
+
+Because of this purpose, When you save EITHER OF the filers, the changes in
+ALL filers are committed simultaneously.
+Currently there is no way to save only some filers without saving others.
+This is to keep all filers up to date and avoid unexpected changes.
+
+
+==============================================================================
+KEY MAPPINGS						*viler-key-mappings*
+
+<Plug>(viler-open-file)
+	Open a file/directory under the cursor. If it is a file, Viler opens
+	it in a buffer. if it is a directory, change the filer's current
+	directory to that directory.
+
+<Plug>(viler-cd-up)
+	Change the filer's current directory to the parent directory.
+
+<Plug>(viler-toggle-tree)
+	Open/close a tree under the cursor.
+
+<Plug>(viler-toggle-dotfiles)
+	Show/hide dotfiles.
+
+<Plug>(viler-refresh)
+	Refresh the filer.
+
+<Plug>(viler-undo)
+<Plug>(viler-redo)
+	Undo/redo on filer.
+	Note that Viler maps these keys for |u| and |CTRL-R| by default.
+	This is necessary to operate undo/redo with keep the filer state
+	correctly. Do not use the default undo/redo directly in Viler's filer.
+
+
+==============================================================================
+FUNCTIONS						*viler-functions*
+
+viler#open([{path}[, {options}]])			*viler#open()*
+	Open a new filer with the given directory.
+	If {path} is omitted it opens a current directory.
+	{options}:
+	do_before
+		Specify an action done before opening a filer.
+		For example you can open a filer with |:vsplit| by this: >
+		viler#open('.', {'do_before': 'vsplit'})
+
+viler#delete_old_backups()				*viler#delete_old_backups()*
+	Delete old backup files. When you delete a file by Viler, Viler does
+	not delete it actually for safety. Instead, it moves the file to
+	$HOME/.viler/apply/{timestamp}/. This function removes the old backups
+	in this directory while keeping the relatively new backups.
+
+
+==============================================================================
+TROUBLE SHOOTING					*viler-trouble-shooting*
+
+------------------------------------------------------------------------------
+Deleted file backup
+
+When you delete a file, Viler does not delete it actually for safety.
+Instead, Viler just moves it to $HOME/.viler/apply/{timestamp}/ on each save.
+So if you delete a file accidentally, please check this directory. Note that
+the filename is changed so you need to inspect the content to find a file.
+
+Also note that Viler does not clean up these backups automatically
+(maybe does in future). To clean up, call |viler#delete_old_backups()|.
+
+
+==============================================================================
+CHANGELOG						*viler-changelog*
+
+See: https://github.com/ryym/vim-viler/blob/master/CHANGELOG.md
