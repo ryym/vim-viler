@@ -31,6 +31,12 @@ function! viler#open(...) abort
   setlocal noswapfile
   setlocal nowrap
 
+  " Currently tab width is fixed.
+  setlocal tabstop=2
+  setlocal shiftwidth=2
+  setlocal softtabstop=2
+  setlocal expandtab
+
   if !g:_viler_is_debug
     setlocal bufhidden=hide
     setlocal nobuflisted
