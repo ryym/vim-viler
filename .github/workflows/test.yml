@@ -1,0 +1,40 @@
+name: Test
+on: [push, pull_request]
+jobs:
+
+  test_vim:
+    name: Run tests on Vim
+    runs-on: ubuntu-latest
+    container:
+      image: ryym/vim-ci-themis:latest
+      env:
+        TOMLJSON_PATH: '.github/workflows/tomljson'
+    steps:
+    - uses: actions/checkout@v1
+    - run: ls
+    - run: themis --version
+    - run: themis --recursive test
+
+  test_neovim:
+    name: Run tests on Neovim
+    runs-on: ubuntu-latest
+    container:
+      image: ryym/neovim-ci-themis:latest
+      env:
+        TOMLJSON_PATH: '.github/workflows/tomljson'
+    steps:
+    - uses: actions/checkout@v1
+    - run: themis --version
+    - run: themis --recursive test
+
+  notify:
+    name: Send failure notification
+    needs: [test_vim, test_neovim]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+    - uses: pullreminders/slack-action@master
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      with:
+        args: '{\"channel\": \"C0QGZEHBR\", \"text\": \"vim-viler test failed\"}'
