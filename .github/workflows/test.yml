@@ -11,7 +11,6 @@ jobs:
         TOMLJSON_PATH: '.github/workflows/tomljson'
     steps:
     - uses: actions/checkout@v1
-    - run: ls
     - run: themis --version
     - run: themis --recursive test
 
