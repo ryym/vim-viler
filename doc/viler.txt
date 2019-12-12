@@ -171,9 +171,9 @@ Rule: Keep edited directory open			*viler-rule-edited-dir-open*
 When you edit the content of a directory, the directory must be open until you
 save. In other words,
 
-- You cannot close the edited directory
+- You cannot close the edited directory tree
 - If there are some changes in the filer,
-	- You cannot change the directory displayed in the filer
+	- You cannot change the current working directory of the filer
 	- You cannot refresh the content of the filer
 
 If you want to copy/move a file to somewhere that is not displayed in the
@@ -214,7 +214,7 @@ To move b and c from foo/ to bar/, just delete them and paste inside of bar/.
 <
 
 Because of this purpose, When you save EITHER OF the filers, the changes in
-ALL filers are committed simultaneously.
+ALL filers are applied simultaneously.
 Currently there is no way to save only some filers without saving others.
 This is to keep all filers up to date and avoid unexpected changes.
 
