@@ -48,38 +48,8 @@ function! s:NodeStore.get_or_make_node(group_id, id, abs_path) abort
   return node
 endfunction
 
-let s:Accessor = {}
-
 function! s:NodeStore.accessor_for(group_id) abort
   let self._ids[a:group_id] = 0
   call self.reset_group(a:group_id)
-
-  let accessor = deepcopy(s:Accessor)
-  let accessor._store = self
-  let accessor._group_id = a:group_id
-  return accessor
-endfunction
-
-function! s:Accessor.get(id) abort
-  let node = self._store.try_get_node(self._group_id, a:id)
-  if type(node) is# v:t_number
-    throw '[viler] Unknown Node ID: ' . a:id
-  endif
-  return node
-endfunction
-
-function! s:Accessor.remove(id) abort
-  call self._store.remove_node(self._group_id, a:id)
-endfunction
-
-function! s:Accessor.clear() abort
-  call self._store.reset_group(self._group_id)
-endfunction
-
-function! s:Accessor.make(abs_path) abort
-  return self._store.make_node(self._group_id, a:abs_path)
-endfunction
-
-function! s:Accessor.get_or_make(id, abs_path) abort
-  return self._store.get_or_make_node(self._group_id, a:id, a:abs_path)
+  return viler#NodeAccessor#new(self, a:group_id)
 endfunction
