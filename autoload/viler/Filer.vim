@@ -92,7 +92,7 @@ function! s:Filer.refresh() abort
     let row = self._buf.node_row(lnum)
 
     " When refreshing after saving, added rows have not corresponding node.
-    if has_key(row, 'node_id')
+    if has_key(row, 'node_id') && row.bufnr is# self._buf.nr()
       let node = self._nodes.get(row.node_id)
       let states[node.abs_path()] = row.state
     endif

@@ -67,13 +67,15 @@ function! s:App.filer_for(bufnr) abort
 endfunction
 
 function! s:App.on_any_buf_save() abort
-  let filers = filter(copy(values(self._filers)), 'v:val.buffer().modified()')
+  let modified_filers = filter(copy(values(self._filers)), 'v:val.buffer().modified()')
 
-  call self._apply_changes(filers)
+  call self._apply_changes(modified_filers)
   let self._commit_id += 1
 
   let current_bufnr = bufnr('%')
-  for filer in filers
+
+  " Update all filers to synchronize latest commit id.
+  for filer in values(self._filers)
     let buf = filer.buffer()
     execute 'silent keepalt buffer' buf.nr()
     silent noautocmd update
