@@ -1,9 +1,9 @@
 let s:Filer = {}
 
-function! viler#Filer#new(commit_id, buf, node_accessor, dirty_checker) abort
+function! viler#Filer#new(commit_id, buf, node_store, dirty_checker) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
-  let filer._nodes = a:node_accessor
+  let filer._nodes = a:node_store
   let filer._diff_checker = a:dirty_checker
   let filer._commit_id = a:commit_id
   let filer._commit_state = {'undo_seq_last': 0}
@@ -39,12 +39,12 @@ endfunction
 
 function! s:Filer._get_node(node_id, commit_id) abort
   call self._assert_valid_commit_id(a:commit_id)
-  return self._nodes.get(a:node_id)
+  return self._nodes.get_node(a:node_id)
 endfunction
 
 function! s:Filer._get_or_make_node(node_id, commit_id, path) abort
   call self._assert_valid_commit_id(a:commit_id)
-  return self._nodes.get_or_make(a:node_id, a:path)
+  return self._nodes.get_or_make_node(a:node_id, a:path)
 endfunction
 
 function! s:Filer._assert_valid_commit_id(commit_id) abort
@@ -54,9 +54,7 @@ function! s:Filer._assert_valid_commit_id(commit_id) abort
 endfunction
 
 function! s:Filer.display(dir, opts) abort
-  call self._nodes.clear()
-
-  let dir_node = self._nodes.make(a:dir)
+  let dir_node = self._nodes.get_or_make_node_from_path(a:dir)
   let rows = self._list_children(a:dir, 0, get(a:opts, 'states', {}))
   call self._buf.display_rows(self._commit_id, dir_node, rows)
 
@@ -93,7 +91,7 @@ function! s:Filer.refresh() abort
 
     " When refreshing after saving, added rows have not corresponding node.
     if has_key(row, 'node_id') && row.bufnr is# self._buf.nr()
-      let node = self._nodes.get(row.node_id)
+      let node = self._nodes.get_node(row.node_id)
       let states[node.abs_path()] = row.state
     endif
   endwhile
@@ -110,7 +108,7 @@ function! s:Filer._list_children(dir, depth, states) abort
     endif
     let row = {'props': {'depth': a:depth, 'commit_id': self._commit_id}}
     call add(rows, row)
-    let row.node = self._nodes.make(viler#Path#join(a:dir, name))
+    let row.node = self._nodes.get_or_make_node_from_path(viler#Path#join(a:dir, name))
     let node_path = row.node.abs_path()
     let row.state = get(a:states, node_path, {})
     if row.node.is_dir && get(row.state, 'tree_open', 0)
@@ -232,7 +230,6 @@ function! s:Filer._close_tree(dir_node, dir_row) abort
     if row.depth <=# a:dir_row.depth
       break
     endif
-    call self._nodes.remove(row.node_id)
   endwhile
   if a:dir_row.lnum + 1 < l
     call self._buf.delete_lines(a:dir_row.lnum + 1, l - 1)
@@ -254,7 +251,6 @@ function! s:Filer.undo() abort
     return
   endif
 
-  call self._nodes.clear()
   call self._restore_nodes_on_buf(prev_dir)
 
   call self._buf.save()
@@ -269,7 +265,6 @@ function! s:Filer.redo() abort
   let prev_dir = self._buf.current_dir()
   let modified = self._buf.redo()
 
-  call self._nodes.clear()
   call self._restore_nodes_on_buf(prev_dir)
 
   if !modified

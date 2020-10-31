@@ -3,7 +3,7 @@ let s:repo_root = expand('<sfile>:p:h:h:h')
 let s:App = {}
 
 function! viler#App#create(work_dir) abort
-  let node_store = viler#NodeStore#new()
+  let node_store = viler#NodeStore2#new()
 
   return viler#App#new(
     \   a:work_dir,
@@ -34,13 +34,12 @@ function! s:App.create_filer(dir) abort
   let bufnr = bufnr('%')
   call buffer.bind(bufnr)
 
-  let node_accessor = self._node_store.accessor_for(bufnr)
   let diff_checker = viler#diff#Checker#new(self._node_store)
 
   let filer = viler#Filer#new(
     \   self._commit_id,
     \   buffer,
-    \   node_accessor,
+    \   self._node_store,
     \   diff_checker,
     \ )
   let self._filers[bufnr] = filer

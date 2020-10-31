@@ -26,14 +26,13 @@ function! s:open_filer(dir)
   let buffer = viler#Buffer#new()
   call buffer.bind(bufnr)
 
-  let node_store = viler#NodeStore#new()
-  let node_accessor = node_store.accessor_for(bufnr)
+  let node_store = viler#NodeStore2#new()
   let diff_checker = viler#diff#Checker#new(node_store)
 
   let filer = viler#Filer#new(
     \   0,
     \   buffer,
-    \   node_accessor,
+    \   node_store,
     \   diff_checker,
     \ )
 
