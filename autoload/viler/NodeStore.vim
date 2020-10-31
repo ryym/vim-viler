@@ -63,7 +63,7 @@ endfunction
 function! s:Accessor.get(id) abort
   let node = self._store.try_get_node(self._group_id, a:id)
   if type(node) is# v:t_number
-    throw '[viler] Unknown Node ID' a:id
+    throw '[viler] Unknown Node ID: ' . a:id
   endif
   return node
 endfunction
