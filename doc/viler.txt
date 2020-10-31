@@ -1,6 +1,6 @@
 *viler.txt*	Editable file explorer
 
-Version: 0.0.1
+Version: 0.0.2
 Author: ryym <ryym.64@gmail.com>
 
 ==============================================================================
@@ -222,6 +222,19 @@ This is to keep all filers up to date and avoid unexpected changes.
 ==============================================================================
 KEY MAPPINGS						*viler-key-mappings*
 
+Configure key mapping for viler file type. Example: >
+
+	autocmd vimrc FileType viler call s:configure_viler_buffer()
+
+	function! s:configure_viler_buffer() abort
+	  nnoremap <buffer><nowait> <CR> :<C-u>call viler#open_cursor_file('edit')<CR>
+	  nmap <buffer><nowait> <C-l> <Plug>(viler-open-file)
+	  nmap <buffer><nowait> <C-h> <Plug>(viler-cd-up)
+	  nmap <buffer><nowait> t <Plug>(viler-toggle-tree)
+	  " ...
+	endfunction
+<
+
 <Plug>(viler-open-file)
 	Open a file/directory under the cursor. If it is a file, Viler opens
 	it in a buffer. if it is a directory, change the filer's current
@@ -258,6 +271,15 @@ viler#open([{path}[, {options}]])			*viler#open()*
 		Specify an action done before opening a filer.
 		For example you can open a filer with |:vsplit| by this: >
 		viler#open('.', {'do_before': 'vsplit'})
+
+viler#open_cursor_file([{cmd}])				*viler#open_cursor_file()*
+	Open a file under the cursor. This can only be used in a filer buffer.
+	{options}:
+	cmd
+		Specify a command to open a file.
+		The default value is 'wincmd w | drop'.
+		You can open a file in a same window by: >
+		call viler#open_cursor_file('edit')
 
 viler#delete_old_backups()				*viler#delete_old_backups()*
 	Delete old backup files. When you delete a file by Viler, Viler does
