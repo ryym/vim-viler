@@ -33,6 +33,10 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
 
     if row.is_new
       call a:ctx.on_new_file(a:dir, row)
+      if row.is_dir
+        let dir = s:next_dir_info(a:dir, viler#Path#join(a:dir.path, row.name))
+        call self._walk_tree(dir, a:iter, a:ctx)
+      endif
       continue
     endif
 
@@ -47,7 +51,7 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
     if src_path is# row_path
       let unchanged_files[row.name] = 1
       if row.is_dir && row.state.tree_open
-        let dir = s:next_dir_ctx(a:dir, src_path)
+        let dir = s:next_dir_info(a:dir, src_path)
         call self._walk_tree(dir, a:iter, a:ctx)
       endif
       continue
@@ -55,26 +59,28 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
 
     call a:ctx.on_moved_file(a:dir, row, {'path': src_path, 'node': node})
     if row.is_dir && row.state.tree_open
-      let dir = s:next_dir_ctx(a:dir, src_path)
+      let dir = s:next_dir_info(a:dir, src_path)
       call self._walk_tree(dir, a:iter, a:ctx)
     endif
   endwhile
 
-  let real_files = viler#lib#Fs#readdir(a:dir.path)
-  for name in real_files
-    if !has_key(unchanged_files, name)
-      " If a file is added in this directory outside of Viler, it must be preserved.
-      " That's why we check the path has a corresponding Node. If not, the file is
-      " added outside so we ignore it instead of marking it as deleted.
-      let path = viler#Path#join(a:dir.path, name)
-      if a:iter.filetree.has_node_for(path)
-        call a:ctx.on_deleted_file(a:dir, {'name': name, 'is_dir': isdirectory(path)})
+  if isdirectory(a:dir.path)
+    let real_files = viler#lib#Fs#readdir(a:dir.path)
+    for name in real_files
+      if !has_key(unchanged_files, name)
+        " If a file is added in this directory outside of Viler, it must be preserved.
+        " That's why we check the path has a corresponding Node. If not, the file is
+        " added outside so we ignore it instead of marking it as deleted.
+        let path = viler#Path#join(a:dir.path, name)
+        if a:iter.filetree.has_node_for(path)
+          call a:ctx.on_deleted_file(a:dir, {'name': name, 'is_dir': isdirectory(path)})
+        endif
       endif
-    endif
-  endfor
+    endfor
+  endif
 endfunction
 
-function! s:next_dir_ctx(dir, path) abort
+function! s:next_dir_info(dir, path) abort
   let next_dir = {
     \   'path': a:path,
     \   'depth': a:dir.depth + 1,
