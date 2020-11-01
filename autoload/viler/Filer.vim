@@ -57,11 +57,6 @@ function! s:Filer.display(dir, opts) abort
   let dir_node = self._nodes.get_or_make_node_from_path(a:dir)
   let rows = self._list_children(a:dir, 0, get(a:opts, 'states', {}))
   call self._buf.display_rows(self._commit_id, dir_node, rows)
-
-  if !has_key(a:opts, 'states') && bufnr('%') is# self._buf.nr()
-    call self._buf.reset_cursor()
-  endif
-
   return {'dir': dir_node, 'rows': rows}
 endfunction
 
@@ -140,6 +135,7 @@ function! s:Filer.open_cursor_file(cmd) abort
   let node = self._get_node(row.node_id, row.commit_id)
   if node.is_dir
     call self.display(node.abs_path(), {})
+    call self._buf.reset_cursor()
   else
     execute a:cmd node.abs_path()
   endif
