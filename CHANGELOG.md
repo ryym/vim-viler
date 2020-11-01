@@ -5,4 +5,4 @@
 ## 0.0.2 (2020-11-1)
 
 - Fix some bugs
-- Update 
+- Update help doc
