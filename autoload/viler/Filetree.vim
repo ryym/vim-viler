@@ -49,7 +49,7 @@ function! s:Iter.lnum() abort
 endfunction
 
 function! s:Iter.peek() abort
-  return self.filetree._buf.node_row(self._lnum)
+  return self.filetree._buf.row_info(self._lnum)
 endfunction
 
 function! s:Iter.next() abort

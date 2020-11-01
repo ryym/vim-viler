@@ -57,7 +57,7 @@ function! s:suite.open_filer_for_specified_dir() abort
 
   call s:assert.equals(buf.shown_row_count(), 2, 'row count')
 
-  let row = buf.node_row(buf.lnum_last())
+  let row = buf.row_info(buf.lnum_last())
   call s:assert.equals([row.name, row.is_dir], ['b', 0])
 endfunction
 
@@ -78,7 +78,7 @@ function! s:suite.toggle_tree() abort
   call filer.toggle_tree_at(buf.lnum_first())
 
   call s:assert.equals(buf.shown_row_count(), 3, 'row count when open')
-  let row = buf.node_row(buf.lnum_first() + 1)
+  let row = buf.row_info(buf.lnum_first() + 1)
   call s:assert.equals(row.name, 'a')
 
   call filer.toggle_tree_at(buf.lnum_first())

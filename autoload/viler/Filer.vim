@@ -87,7 +87,7 @@ function! s:Filer.refresh() abort
   let last_lnum = self._buf.lnum_last()
   while lnum < last_lnum
     let lnum += 1
-    let row = self._buf.node_row(lnum)
+    let row = self._buf.row_info(lnum)
 
     " When refreshing after saving, added rows have not corresponding node.
     if has_key(row, 'node_id') && row.bufnr is# self._buf.nr()
@@ -132,7 +132,7 @@ function! s:sort_rows_by_type_and_name(row1, row2) abort
 endfunction
 
 function! s:Filer.open_cursor_file(cmd) abort
-  let row = self._buf.node_row(self._buf.lnum_cursor())
+  let row = self._buf.row_info(self._buf.lnum_cursor())
   if row.is_new
     throw '[viler] This file is not saved yet'
   endif
@@ -185,7 +185,7 @@ function! s:Filer.toggle_tree_at(lnum) abort
     return
   endif
 
-  let row = self._buf.node_row(a:lnum)
+  let row = self._buf.row_info(a:lnum)
   if !row.is_dir
     return
   endif
@@ -198,11 +198,11 @@ function! s:Filer.toggle_tree_at(lnum) abort
     if self._is_dirty(dir)
       throw '[viler] Cannot close unsaved edited directory'
     endif
-    call self._buf.update_node_row(node, row, {'tree_open': 0})
+    call self._buf.update_row_info(node, row, {'tree_open': 0})
     call self._close_tree(node, row)
   else
 
-    call self._buf.update_node_row(node, row, {'tree_open': 1})
+    call self._buf.update_row_info(node, row, {'tree_open': 1})
     let rows = self._list_children(node.abs_path(), 0, {})
     let nodes = map(rows, 'v:val.node')
     call self._buf.append_nodes(row.lnum, nodes, {
@@ -226,7 +226,7 @@ function! s:Filer._close_tree(dir_node, dir_row) abort
       break
     endif
 
-    let row = self._buf.node_row(l)
+    let row = self._buf.row_info(l)
     if row.depth <=# a:dir_row.depth
       break
     endif
@@ -284,7 +284,7 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
   let last_l = self._buf.lnum_last()
   while l < last_l
     let l += 1
-    let row = self._buf.node_row(l)
+    let row = self._buf.row_info(l)
 
     if row.is_new
       continue

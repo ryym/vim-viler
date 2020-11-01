@@ -66,7 +66,7 @@ function! s:Buffer.node_lnum(node_id) abort
   let l = 1 " Skip the first line which contains buffer metadata.
   while l < self.lnum_last()
     let l += 1
-    let row = self.node_row(l)
+    let row = self.row_info(l)
     if row.node_id is# a:node_id
       return l
     endif
@@ -126,14 +126,14 @@ function! s:Buffer.current_dir() abort
   return s:decode_filer_metadata(line)
 endfunction
 
-function! s:Buffer.node_row(lnum) abort
+function! s:Buffer.row_info(lnum) abort
   let linestr = getbufline(self._nr, a:lnum)[0]
   let row = viler#Buffer#decode_node_line(linestr)
   let row.lnum = a:lnum
   return row
 endfunction
 
-function! s:Buffer.update_node_row(node, row, state_changes) abort
+function! s:Buffer.update_row_info(node, row, state_changes) abort
   let state = copy(a:row.state)
   for key in keys(a:state_changes)
     let state[key] = a:state_changes[key]
