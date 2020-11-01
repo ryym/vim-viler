@@ -16,6 +16,7 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
     let row = a:iter.peek()
 
     if row.name is# ''
+      call a:ctx.on_empty_line(a:dir, row)
       call a:iter.next()
       continue
     endif

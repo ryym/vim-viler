@@ -24,6 +24,9 @@ endfunction
 
 let s:WalkCtx = {}
 
+function! s:WalkCtx.on_empty_line(...) abort
+  let self.is_dirty = 1
+endfunction
 function! s:WalkCtx.on_new_file(...) abort
   let self.is_dirty = 1
 endfunction

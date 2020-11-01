@@ -233,7 +233,6 @@ function! s:Filer.toggle_tree_at(lnum) abort
     call self._buf.update_row_info(node, row, {'tree_open': 0})
     call self._close_tree(node, row)
   else
-
     call self._buf.update_row_info(node, row, {'tree_open': 1})
     let rows = self._list_children(node.abs_path(), 0, {})
     let nodes = map(rows, 'v:val.node')

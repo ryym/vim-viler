@@ -25,6 +25,10 @@ function! s:new_walk_ctx(commit_id, diff) abort
   return ctx
 endfunction
 
+function! s:WalkCtx.on_empty_line(...) abort
+  " Do nothing.
+endfunction
+
 function! s:WalkCtx.on_new_file(dir, row) abort
   call self.diff.new_file(a:dir.path, a:row.name, {'is_dir': a:row.is_dir})
 endfunction
