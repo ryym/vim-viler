@@ -150,21 +150,10 @@ function! s:Filer.go_up_dir() abort
     throw '[viler] Cannot leave unsaved edited directory'
   endif
 
-  let result = self.display(dir_node.dir, {})
-
-  let prev_dir_node_id = 0
-  for row in result.rows
-    if row.node.name is# dir_node.name
-      let prev_dir_node_id = row.node.id
-      break
-    endif
-  endfor
-
-  if 0 < prev_dir_node_id
-    let lnum = self._buf.node_lnum(prev_dir_node_id)
-    if 0 < lnum
-      call self._buf.put_cursor(lnum, 1)
-    endif
+  call self.display(dir_node.dir, {})
+  let lnum_prev_dir = self._buf.node_lnum(cur_dir.node_id)
+  if 0 < lnum_prev_dir
+    call self._buf.put_cursor(lnum_prev_dir, 1)
   endif
 endfunction
 
