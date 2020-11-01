@@ -75,7 +75,7 @@ endfunction
 
 function! s:Filer.display(dir, opts) abort
   let dir_node = self._nodes.get_or_make_node_from_path(a:dir)
-  let rows = self._list_children(a:dir, 0, get(a:opts, 'states', {}))
+  let rows = self._list_children(a:dir, 0, a:opts)
   call self._buf.display_rows(self._commit_id, dir_node, rows)
   return {'dir': dir_node, 'rows': rows}
 endfunction
@@ -111,7 +111,7 @@ function! s:Filer.refresh() abort
     endif
   endwhile
 
-  call self.display(cur_dir.path, {'states': states})
+  call self.display(cur_dir.path, {'states': states, 'refresh_nodes': 1})
 endfunction
 
 function! s:Filer._abs_path_of_row(lnum) abort
@@ -141,7 +141,7 @@ function! s:Filer._abs_path_of_row(lnum) abort
   return viler#Path#join(self._buf.current_dir().path, rel_path)
 endfunction
 
-function! s:Filer._list_children(dir, depth, states) abort
+function! s:Filer._list_children(dir, depth, opts) abort
   let show_dotfiles = self._config.show_dotfiles
   let rows = []
   for name in viler#lib#Fs#readdir(a:dir)
@@ -150,11 +150,17 @@ function! s:Filer._list_children(dir, depth, states) abort
     endif
     let row = {'props': {'depth': a:depth, 'commit_id': self._commit_id}}
     call add(rows, row)
+
     let row.node = self._nodes.get_or_make_node_from_path(viler#Path#join(a:dir, name))
+    if (get(a:opts, 'refresh_nodes', 0))
+      call row.node.refresh()
+    endif
+
     let node_path = row.node.abs_path()
-    let row.state = get(a:states, node_path, {})
+    let states = get(a:opts, 'states', {})
+    let row.state = get(states, node_path, {})
     if row.node.is_dir && get(row.state, 'tree_open', 0)
-      let row.children = self._list_children(node_path, a:depth + 1, a:states)
+      let row.children = self._list_children(node_path, a:depth + 1, a:opts)
     endif
   endfor
 

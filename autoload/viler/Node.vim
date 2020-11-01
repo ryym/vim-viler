@@ -18,3 +18,7 @@ endfunction
 function! s:Node.abs_path() abort
   return viler#Path#join(self.dir, self.name)
 endfunction
+
+function! s:Node.refresh() abort
+  let self.is_dir = isdirectory(self.abs_path())
+endfunction
