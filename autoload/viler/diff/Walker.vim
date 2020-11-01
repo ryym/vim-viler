@@ -27,7 +27,7 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
     call a:iter.next()
 
     if row.depth isnot# a:dir.depth
-      throw '[vfiler] Wierd indentation at line ' . string(a:iter.lnum() - 1) . ': ' . row.name
+      throw '[vfiler] Unexpected indentation at line ' . string(a:iter.lnum() - 1) . ': ' . row.name
     endif
 
     if row.is_new
