@@ -25,7 +25,27 @@ function! s:Filer.commit(commit_id) abort
   let undotree = self._buf.undotree()
   let self._commit_state = { 'undo_seq_last': undotree.seq_last + 1 }
 
+  let lnum_cursor = self._buf.lnum_cursor()
+  let cursor_abs_path = self._abs_path_of_row(lnum_cursor)
+
   call self.refresh()
+
+  " Adjust the cursor position. For example if you add a new file and save,
+  " the files are sorted at refresh() and the added file may move to the different line.
+  " In this case the cursor should be moved as well to the line of that file.
+  if bufnr('%') is# self._buf.nr() && lnum_cursor >= self._buf.lnum_first()
+    let colnum = self._buf.colnum_cursor()
+    let l = self._buf.lnum_first()
+    while l <= self._buf.lnum_last()
+      let row = self._buf.row_info(l)
+      let node = self._nodes.get_node(row.node_id)
+      if node.abs_path() is# cursor_abs_path
+        call self._buf.put_cursor(l, colnum)
+        break
+      endif
+      let l += 1
+    endwhile
+  endif
 endfunction
 
 function! s:Filer.buf_state() abort
@@ -92,6 +112,33 @@ function! s:Filer.refresh() abort
   endwhile
 
   call self.display(cur_dir.path, {'states': states})
+endfunction
+
+function! s:Filer._abs_path_of_row(lnum) abort
+  let lfirst = self._buf.lnum_first()
+  if a:lnum < lfirst
+    return self._buf.current_dir().path
+  endif
+
+  let target_row = self._buf.row_info(a:lnum)
+
+  " We do not use node.abs_path() here because the file name
+  " under the cursor may be renamed and is not saved yet.
+
+  let paths = [target_row.name]
+  let depth = target_row.depth
+  let l = a:lnum - 1
+  while lfirst <= l && 0 < depth
+    let row = self._buf.row_info(l)
+    if row.depth < depth
+      call add(paths, row.name)
+      let depth -= 1
+    endif
+    let l -= 1
+  endwhile
+
+  let rel_path = reduce(reverse(paths), { path, name -> viler#Path#join(path, name) })
+  return viler#Path#join(self._buf.current_dir().path, rel_path)
 endfunction
 
 function! s:Filer._list_children(dir, depth, states) abort

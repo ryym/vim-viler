@@ -43,6 +43,10 @@ function! s:Buffer.lnum_cursor() abort
   return line('.')
 endfunction
 
+function! s:Buffer.colnum_cursor() abort
+  return col('.')
+endfunction
+
 function! s:Buffer.put_cursor(lnum, col) abort
   call cursor(a:lnum, a:col)
 endfunction
