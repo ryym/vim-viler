@@ -171,6 +171,10 @@ function! s:Buffer.redo() abort
   " Decide whether the 'redo'ne buffer should be modified or not.
   " For example, We don't want to make a buffer 'modified' just by 'redo'ing tree toggling.
   let curhead = self.undotree_curhead()
+  if curhead is#0
+    return
+  endif
+
   let modified = !has_key(curhead, 'save')
   silent redo
   return modified
