@@ -105,3 +105,47 @@ function! s:suite.keep_buf_states_over_refresh() abort
   call s:assert.equals(buf.shown_row_count(), 3, 'row count after refresh')
   call s:assert.equals(buf.lnum_cursor(), first_lnum + 2, 'cursor position')
 endfunction
+
+function! s:suite.go_down_dir() abort
+  call s:setup_files([
+    \   'd1/',
+    \   '  a',
+    \   '  b',
+    \ ])
+
+  let filer = s:open_filer(s:work_dir)
+  let buf = filer.buffer()
+  let first_lnum = buf.lnum_first()
+
+  call buf.put_cursor(first_lnum, 1)
+  call s:assert.equals(buf.shown_row_count(), 1, 'initial row count')
+
+  call filer.open_cursor_file('edit')
+  call s:assert.equals(buf.shown_row_count(), 2, 'row count after go-down')
+
+  let row1 = buf.row_info(first_lnum)
+  let row2 = buf.row_info(first_lnum + 1)
+  let names = [row1.name, row2.name]
+  call s:assert.equals(names, ['a', 'b'], 'shown file names')
+endfunction
+
+function! s:suite.go_up_dir() abort
+  call s:setup_files([
+    \   'd1/',
+    \   '  a',
+    \   '  b',
+    \ ])
+
+  let filer = s:open_filer(viler#Path#join(s:work_dir, 'd1'))
+  let buf = filer.buffer()
+  let first_lnum = buf.lnum_first()
+
+  call buf.put_cursor(first_lnum, 1)
+  call s:assert.equals(buf.shown_row_count(), 2, 'initial row count')
+
+  call filer.go_up_dir()
+  call s:assert.equals(buf.shown_row_count(), 1, 'row count after go-down')
+
+  let row = buf.row_info(first_lnum)
+  call s:assert.equals(row.name, 'd1', 'shown file name')
+endfunction
