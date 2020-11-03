@@ -43,6 +43,25 @@ function! s:displayed_lines()
   return s:strip_meta_from_lines(getline(1, '$'))
 endfunction
 
+" Do :write and throw if it fails.
+function! s:write_buffer()
+  let bnr = bufnr('%')
+  let modified_before = getbufvar(bnr, '&modified')
+
+  redir => output
+  try
+    execute 'write'
+  finally
+    redir END
+  endtry
+
+  let modified_after = getbufvar(bnr, '&modified')
+  if modified_before && modified_after
+    throw 'buffer write failed. See output log'
+    call g:t.log(output)
+  endif
+endfunction
+
 " ===============
 
 function! s:suite.open_filer_for_specified_dir() abort
@@ -185,7 +204,7 @@ function! s:suite.add_one_file_to_last() abort
 
   " Add a line c and save.
   call append('$',  'c')
-  execute 'write'
+  call s:write_buffer()
 
   " Check lines on filer.
   call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b', 'c'], 'lines after write')
@@ -210,7 +229,7 @@ function! s:suite.add_one_file_to_middle() abort
   call cursor(3, 1)
   call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'c', 'b'], 'lines before write')
 
-  execute 'write'
+  call s:write_buffer()
   call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b', 'c'], 'lines after write')
 
   " Check actual files.
@@ -234,7 +253,7 @@ function! s:suite.copy_one_file() abort
   " Copy the line a.
   execute '2copy 2'
   execute '3s/^a/a2'
-  execute 'write'
+  call s:write_buffer()
 
   " Check lines on filer.
   call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'a2', 'b'], 'lines after write')
@@ -258,7 +277,7 @@ function! s:suite.rename_one_file() abort
 
   " Rename the line a and save.
   execute '2s/^a/_a'
-  execute 'write'
+  call s:write_buffer()
 
   " Check lines on filer.
   call s:assert.equals(s:displayed_lines(), [s:work_dir, '_a', 'b'], 'lines after write')
@@ -280,7 +299,7 @@ function! s:suite.delete_one_file() abort
 
   " Delete the line b and save.
   execute '3delete'
-  execute 'write'
+  call s:write_buffer()
 
   " Check lines on filer.
   call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a'], 'lines after write')
