@@ -3,7 +3,7 @@ let s:repo_root = expand('<sfile>:p:h:h:h')
 let s:App = {}
 
 function! viler#App#create(work_dir) abort
-  let node_store = viler#NodeStore2#new()
+  let node_store = viler#NodeStore#new()
 
   return viler#App#new(
     \   a:work_dir,

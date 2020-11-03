@@ -26,7 +26,7 @@ function! s:open_filer(dir)
   let buffer = viler#Buffer#new()
   call buffer.bind(bufnr)
 
-  let node_store = viler#NodeStore2#new()
+  let node_store = viler#NodeStore#new()
   let diff_checker = viler#diff#Checker#new(node_store)
 
   let filer = viler#Filer#new(
