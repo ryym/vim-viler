@@ -124,13 +124,18 @@ function! s:suite.keep_buf_states_over_refresh() abort
   " Put a cursor to last line (d2/).
   call cursor(4, 1)
 
+  " Add a file outside of Viler.
+  let fs = viler#lib#Fs#new()
+  call fs.make_dir(viler#Path#join(s:work_dir, 'd1/b'))
+
   call viler#refresh()
 
   let want_lines = [
     \   s:work_dir,
     \   'd1/',
+    \   '  b/',
     \   '  a',
-    \   'd2/'
+    \   'd2/',
     \ ]
   call s:assert.equals(s:displayed_lines(), want_lines, 'after refresh')
   call s:assert.equals(getpos('.')[1], 4, 'cursor position lnum')
@@ -189,6 +194,32 @@ function! s:suite.add_one_file_to_last() abort
   let ffs = viler#testutil#FlistFs#create()
   let got = ffs.files_to_flist(s:work_dir)
   call s:assert.equals(got.lines(), ['a', 'b', 'c'], 'actual files after write')
+endfunction
+
+function! s:suite.add_one_file_to_middle() abort
+  call s:setup_files([
+    \   'a',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b'], 'initial lines')
+
+  " Add a line c and put a cursor on it.
+  call append(2,  'c')
+  call cursor(3, 1)
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'c', 'b'], 'lines before write')
+
+  execute 'write'
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b', 'c'], 'lines after write')
+
+  " Check actual files.
+  let ffs = viler#testutil#FlistFs#create()
+  let got = ffs.files_to_flist(s:work_dir)
+  call s:assert.equals(got.lines(), ['a', 'b', 'c'], 'actual files after write')
+
+  " Check the cursor position follows the line c.
+  call s:assert.equals(getpos('.')[1], 4, 'cursor position')
 endfunction
 
 function! s:suite.copy_one_file() abort
