@@ -241,13 +241,13 @@ endfunction
 
 function! s:filer_metadata(commit_id, dir_node) abort
   let meta = ' /|' . a:commit_id . '_' . a:dir_node.id
-  return fnamemodify(a:dir_node.abs_path(), ':~') . meta
+  return fnamemodify(a:dir_node.abs_path() . '/', ':~') . meta
 endfunction
 
 function! s:decode_filer_metadata(line) abort
   let idx_sep = viler#lib#Str#last_index(a:line, ' ')
   let meta = a:line[idx_sep + 1:]
-  let dir_path = a:line[0:idx_sep - 1]
+  let dir_path = a:line[0:idx_sep - 2] " Remove last '/'
   let [commit_id, node_id] = split(meta[2:], '_')
   return {
     \   'commit_id': str2nr(commit_id),
