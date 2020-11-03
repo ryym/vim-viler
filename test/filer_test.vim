@@ -7,12 +7,10 @@ let s:bufs = g:t.use_buffers(s:hooks)
 function! s:hooks.before_each.prepare_work_dir() abort
   let s:work_root = tempname()
   let s:work_dir = s:work_root . '/work'
-  let s:filer_work_dir = s:work_root . '/filer'
   if isdirectory(s:work_root)
     call delete(s:work_root, 'rf')
   endif
   call mkdir(s:work_dir, 'p')
-  call mkdir(s:filer_work_dir, 'p')
 endfunction
 
 function! s:hooks.after_each.clear_work_dir() abort
