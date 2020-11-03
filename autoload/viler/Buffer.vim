@@ -240,7 +240,7 @@ function! s:decode_node_line_meta(meta) abort
 endfunction
 
 function! s:filer_metadata(commit_id, dir_node) abort
-  let meta = ' ||' . a:commit_id . '_' . a:dir_node.id
+  let meta = ' /|' . a:commit_id . '_' . a:dir_node.id
   return fnamemodify(a:dir_node.abs_path(), ':~') . meta
 endfunction
 

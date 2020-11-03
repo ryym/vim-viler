@@ -1,9 +1,9 @@
 function! s:main() abort
-  syntax match VilerHeaderLine /\v.+\|\|.+$/
+  syntax match VilerHeaderLine /\v.+\/\|.+$/
     \ contains=VilerFilerMeta
   highlight link VilerHeaderLine Comment
 
-  syntax match VilerFilerMeta /\v\|\|\d+_\d+/
+  syntax match VilerFilerMeta /\v\/\|\d+_\d+/
     \ contained
     \ conceal
 
