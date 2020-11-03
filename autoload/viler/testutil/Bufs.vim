@@ -13,6 +13,10 @@ function! s:Bufs.reset() abort
   let self._bufnrs = []
 endfunction
 
+function! s:Bufs.add(bufnr)
+  call add(self._bufnrs, a:bufnr)
+endfunction
+
 function! s:Bufs.open() abort
   let self._id += 1
   silent execute 'edit' viler#Path#join(self.work_dir, self._id)

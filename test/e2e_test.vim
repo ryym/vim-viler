@@ -5,6 +5,9 @@ let s:assert = themis#helper('assert')
 
 let s:hooks = g:t.hooks()
 
+" Manage buffers to clean up after each test.
+let s:bufs = g:t.use_buffers(s:hooks)
+
 function! s:hooks.before_each.prepare_work_dir() abort
   let s:work_root = tempname()
   let s:work_dir = s:work_root . '/work/'
@@ -18,8 +21,8 @@ function! s:hooks.after_each.clear_work_dir() abort
   call delete(s:work_root, 'rf')
 endfunction
 
-function! s:hooks.after_each.wipeout_buffer() abort
-  silent execute 'bwipeout!' bufnr('%')
+function! s:hooks.before_each.register_buf() abort
+  call s:bufs.add(bufnr('%'))
 endfunction
 
 call s:hooks.register_to(s:suite)
