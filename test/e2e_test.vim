@@ -46,7 +46,6 @@ endfunction
 " Do :write and throw if it fails.
 function! s:write_buffer()
   let bnr = bufnr('%')
-  let modified_before = getbufvar(bnr, '&modified')
 
   redir => output
   try
@@ -55,10 +54,9 @@ function! s:write_buffer()
     redir END
   endtry
 
-  let modified_after = getbufvar(bnr, '&modified')
-  if modified_before && modified_after
-    throw 'buffer write failed. See output log'
+  if output =~# 'E\d\+'
     call g:t.log(output)
+    throw 'buffer write seems failed. See output log.'
   endif
 endfunction
 
