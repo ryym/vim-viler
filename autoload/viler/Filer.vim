@@ -137,7 +137,12 @@ function! s:Filer._abs_path_of_row(lnum) abort
     let l -= 1
   endwhile
 
-  let rel_path = reduce(reverse(paths), { path, name -> viler#Path#join(path, name) })
+  let paths = reverse(paths)
+  let rel_path = paths[0]
+  for name in paths[1:-1]
+    let rel_path = viler#Path#join(rel_path, name)
+  endfor
+
   return viler#Path#join(self._buf.current_dir().path, rel_path)
 endfunction
 
