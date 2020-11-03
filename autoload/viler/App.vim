@@ -67,7 +67,7 @@ endfunction
 
 
 function! s:App._valid_filers() abort
-  return self._filers->copy()->filter('v:val.buffer().exists()')
+  return filter(copy(self._filers), 'v:val.buffer().exists()')
 endfunction
 
 function! s:App.on_any_buf_save() abort
