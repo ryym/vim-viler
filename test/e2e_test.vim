@@ -165,3 +165,94 @@ function! s:suite.go_up_dir() abort
   call viler#go_up_dir()
   call s:assert.equals(s:displayed_lines(), [s:work_dir, 'd1/'], 'lines after go-up')
 endfunction
+
+function! s:suite.add_one_file_to_last() abort
+  call s:setup_files([
+    \   'a',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b'], 'initial lines')
+
+  " Add a line c and save.
+  call append('$',  'c')
+  execute 'write'
+
+  " Check lines on filer.
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b', 'c'], 'lines after write')
+
+  " Check actual files.
+  let ffs = viler#testutil#FlistFs#create()
+  let got = ffs.files_to_flist(s:work_dir)
+  call s:assert.equals(got.lines(), ['a', 'b', 'c'], 'actual files after write')
+endfunction
+
+function! s:suite.copy_one_file() abort
+  call s:setup_files([
+    \   'a content:foo',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b'], 'initial lines')
+
+  " Copy the line a.
+  execute '2copy 2'
+  execute '3s/^a/a2'
+  execute 'write'
+
+  " Check lines on filer.
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'a2', 'b'], 'lines after write')
+
+  " Check actual files.
+  let ffs = viler#testutil#FlistFs#create()
+  let got = ffs.files_to_flist(s:work_dir)
+  let want = ['a content:foo', 'a2 content:foo', 'b']
+  call s:assert.equals(got.lines(), want, 'actual files after write')
+endfunction
+
+function! s:suite.rename_one_file() abort
+  call s:setup_files([
+    \   'a content:foo',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b'], 'initial lines')
+
+  " Rename the line a and save.
+  execute '2s/^a/_a'
+  execute 'write'
+
+  " Check lines on filer.
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, '_a', 'b'], 'lines after write')
+
+  " Check actual files.
+  let ffs = viler#testutil#FlistFs#create()
+  let got = ffs.files_to_flist(s:work_dir)
+  call s:assert.equals(got.lines(), ['_a content:foo', 'b'], 'actual files after write')
+endfunction
+
+function! s:suite.delete_one_file() abort
+  call s:setup_files([
+    \   'a',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b'], 'initial lines')
+
+  " Delete the line b and save.
+  execute '3delete'
+  execute 'write'
+
+  " Check lines on filer.
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a'], 'lines after write')
+
+  " Check actual files.
+  let ffs = viler#testutil#FlistFs#create()
+  let got = ffs.files_to_flist(s:work_dir)
+  call s:assert.equals(got.lines(), ['a'], 'actual files after write')
+endfunction
