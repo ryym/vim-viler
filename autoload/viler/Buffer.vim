@@ -28,6 +28,10 @@ function! s:Buffer.nr() abort
   return self._nr
 endfunction
 
+function! s:Buffer.exists() abort
+  return bufexists(self._nr)
+endfunction
+
 function! s:Buffer.lnum_first() abort
   return 2
 endfunction
