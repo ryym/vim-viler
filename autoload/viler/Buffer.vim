@@ -88,10 +88,6 @@ function! s:Buffer.node_lnum(node_id) abort
   return 0
 endfunction
 
-function! s:Buffer.shown_row_count() abort
-  return self.lnum_last() - self.lnum_first() + 1
-endfunction
-
 function! s:Buffer.display_rows(commit_id, dir_node, rows) abort
   if self.modified()
     throw '[viler] Cannot redraw modified filer'
