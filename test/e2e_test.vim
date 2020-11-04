@@ -307,3 +307,49 @@ function! s:suite.delete_one_file() abort
   let got = ffs.files_to_flist(s:work_dir)
   call s:assert.equals(got.lines(), ['a'], 'actual files after write')
 endfunction
+
+function! s:suite.toggle_dotfiles() abort
+  call s:setup_files([
+    \   '.z',
+    \   'a',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+  " By default dotfiles are not displayed.
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b'], 'initial lines')
+
+  call viler#toggle_dotfiles()
+  let want_lines = [s:work_dir, '.z', 'a', 'b']
+  call s:assert.equals(s:displayed_lines(), want_lines, 'lines after dotfiles enabled')
+
+  call viler#toggle_dotfiles()
+  let want_lines = [s:work_dir, 'a', 'b']
+  call s:assert.equals(s:displayed_lines(), want_lines, 'lines after dotfiles disabled')
+endfunction
+
+function! s:suite.regression__dont_delete_hidden_dotfiles() abort
+  call s:setup_files([
+    \   '.z',
+    \   'a',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+  call s:assert.equals(s:displayed_lines(), [s:work_dir, 'a', 'b'], 'initial lines')
+
+  call viler#toggle_dotfiles()
+  let want_lines = [s:work_dir, '.z', 'a', 'b']
+  call s:assert.equals(s:displayed_lines(), want_lines, 'lines after dotfiles enabled')
+
+  call viler#toggle_dotfiles()
+  let want_lines = [s:work_dir, 'a', 'b']
+  call s:assert.equals(s:displayed_lines(), want_lines, 'lines after dotfiles disabled')
+
+  call append('$', '')
+  call s:write_buffer()
+
+  let ffs = viler#testutil#FlistFs#create()
+  let got = ffs.files_to_flist(s:work_dir)
+  call s:assert.equals(got.lines(), ['.z', 'a', 'b'], 'files after dotfiles toggle and save')
+endfunction
