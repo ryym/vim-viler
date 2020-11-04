@@ -27,6 +27,10 @@ endfunction
 
 call s:hooks.register_to(s:suite)
 
+function! s:suite.before() abort
+  let g:_viler_is_debug = 1
+endfunction
+
 " ===============
 
 function! s:setup_files(lines) abort
