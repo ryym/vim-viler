@@ -19,10 +19,7 @@ endfunction
 
 function! s:Filetree.has_node_for(path) abort
   let node = self._node_store.try_get_node_from_path(a:path)
-  if type(node) is# v:t_number
-    return 0
-  endif
-  return self._buf.should_be_displayed(node.id)
+  return type(node) isnot# v:t_number
 endfunction
 
 function! s:Filetree.iter() abort
