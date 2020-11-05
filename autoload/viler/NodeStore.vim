@@ -8,6 +8,7 @@ function! viler#NodeStore#new() abort
   let store._id = 0
   let store._nodes = {}
   let store._path2node = {}
+  let store._displayed_nodes = {}
   return store
 endfunction
 
@@ -46,4 +47,20 @@ function! s:NodeStore.get_or_make_node_from_path(abs_path) abort
     return self._path2node[a:abs_path] 
   endif
   return self.make_node(a:abs_path)
+endfunction
+
+function! s:NodeStore.clear_displayed_nodes() abort
+  let self._displayed_nodes = {}
+endfunction
+
+function! s:NodeStore.node_displayed(node_id, yes) abort
+  if a:yes
+    let self._displayed_nodes[a:node_id] = 1
+  elseif has_key(self._displayed_nodes, a:node_id)
+    call remove(self._displayed_nodes, a:node_id)
+  endif
+endfunction
+
+function! s:NodeStore.should_be_displayed(node_id) abort
+  return has_key(self._displayed_nodes, a:node_id)
 endfunction

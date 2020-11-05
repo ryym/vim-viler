@@ -69,6 +69,7 @@ function! s:Filer._assert_valid_commit_id(commit_id) abort
 endfunction
 
 function! s:Filer.display(dir, opts) abort
+  call self._nodes.clear_displayed_nodes()
   let dir_node = self._nodes.get_or_make_node_from_path(a:dir)
   let rows = self._list_children(a:dir, 0, a:opts)
   call self._buf.display_rows(self._commit_id, dir_node, rows)
@@ -152,6 +153,7 @@ function! s:Filer._list_children(dir, depth, opts) abort
     call add(rows, row)
 
     let row.node = self._nodes.get_or_make_node_from_path(viler#Path#join(a:dir, name))
+    call self._nodes.node_displayed(row.node.id, 1)
     if (get(a:opts, 'refresh_nodes', 0))
       call row.node.refresh()
     endif
@@ -267,6 +269,7 @@ function! s:Filer._close_tree(dir_node, dir_row) abort
     if row.depth <=# a:dir_row.depth
       break
     endif
+    call self._nodes.node_displayed(row.node_id, 0)
   endwhile
   if a:dir_row.lnum + 1 < l
     call self._buf.delete_lines(a:dir_row.lnum + 1, l - 1)
@@ -288,6 +291,7 @@ function! s:Filer.undo() abort
     return
   endif
 
+  call self._nodes.clear_displayed_nodes()
   call self._restore_nodes_on_buf(prev_dir)
 
   call self._buf.save()
@@ -302,6 +306,7 @@ function! s:Filer.redo() abort
   let prev_dir = self._buf.current_dir()
   let modified = self._buf.redo()
 
+  call self._nodes.clear_displayed_nodes()
   call self._restore_nodes_on_buf(prev_dir)
 
   if !modified
@@ -339,6 +344,7 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
 
     let file_path = viler#Path#join(dir_path, row.name)
     call self._get_or_make_node(row.node_id, row.commit_id, file_path)
+    call self._nodes.node_displayed(row.node_id, 1)
     let prev_depth = row.depth
     let prev_name = row.name
 
