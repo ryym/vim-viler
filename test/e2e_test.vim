@@ -64,6 +64,12 @@ function! s:write_buffer()
   endif
 endfunction
 
+" We need to specify undo breakpoint manually. Otherwise executing 'undo'
+" resets all modifications on the buffer since the changes are made by script.
+function! s:break_undo_sequence()
+  call feedkeys("i\<C-g>u", "x")
+endfunction
+
 " ===============
 
 function! s:suite.open_filer_for_specified_dir() abort
@@ -356,4 +362,58 @@ function! s:suite.regression__dont_delete_hidden_dotfiles() abort
   let ffs = viler#testutil#FlistFs#create()
   let got = ffs.files_to_flist(s:work_dir)
   call s:assert.equals(got.lines(), ['.z', 'a', 'b'], 'files after dotfiles toggle and save')
+endfunction
+
+function! s:suite.undo_redo_directory_change() abort
+  call s:setup_files([
+    \   'd1/',
+    \   '  foo',
+    \   'a',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+  call s:break_undo_sequence()
+
+  let initial_lines = [s:work_dir, 'd1/', 'a', 'b']
+  call s:assert.equals(s:displayed_lines(), initial_lines, 'initial lines')
+
+  call cursor(2, 1)
+  call viler#open_cursor_file()
+
+  let lines_after_cd = [s:work_dir . 'd1/', 'foo']
+  call s:assert.equals(s:displayed_lines(), lines_after_cd, 'lines after go-down into d1/')
+
+  call viler#undo()
+  call s:assert.equals(s:displayed_lines(), initial_lines, 'lines after undo')
+
+  call viler#redo()
+  call s:assert.equals(s:displayed_lines(), lines_after_cd, 'lines after redo')
+endfunction
+
+function! s:suite.undo_redo_tree_toggling() abort
+  call s:setup_files([
+    \   'd1/',
+    \   '  foo',
+    \   'a',
+    \   'b',
+    \ ])
+
+  call viler#open(s:work_dir)
+  call s:break_undo_sequence()
+
+  let initial_lines = [s:work_dir, 'd1/', 'a', 'b']
+  call s:assert.equals(s:displayed_lines(), initial_lines, 'initial lines')
+
+  call cursor(2, 1)
+  call viler#toggle_tree()
+
+  let lines_after_toggle = [s:work_dir, 'd1/', '  foo', 'a', 'b']
+  call s:assert.equals(s:displayed_lines(), lines_after_toggle, 'lines after open d1/')
+
+  call viler#undo()
+  call s:assert.equals(s:displayed_lines(), initial_lines, 'lines after undo')
+
+  call viler#redo()
+  call s:assert.equals(s:displayed_lines(), lines_after_toggle, 'lines after redo')
 endfunction
