@@ -1,3 +1,5 @@
+" vi: set ft=vim :
+
 " Global test utility.
 let g:t = {}
 
@@ -35,4 +37,30 @@ function! s:buf_after(bufs) abort
   call delete(a:bufs.work_dir, "rf")
 endfunction
 
+function! g:t.use_work_dir(hooks) abort
+  let work_dir_path = tempname() . '/' 
+  let a:hooks.before_each.prepare_work_dir = function('s:work_dir_before_each', [work_dir_path])
+  let a:hooks.after_each.rm_work_dir = function('s:work_dir_after_each', [work_dir_path])
 
+  let work_dir = {}
+  let work_dir.path = work_dir_path
+  let work_dir.make_files = function('s:setup_files', [work_dir_path])
+  return work_dir
+endfunction
+
+function! s:setup_files(work_dir_path, lines) abort
+  let flist = viler#testutil#Flist#new(a:lines)
+  let ffs = viler#testutil#FlistFs#create()
+  call ffs.flist_to_files(a:work_dir_path, flist)
+endfunction
+
+function! s:work_dir_before_each(work_dir_path) abort
+  if isdirectory(a:work_dir_path)
+    call delete(a:work_dir_path, 'rf')
+  endif
+  call mkdir(a:work_dir_path, 'p')
+endfunction
+
+function! s:work_dir_after_each(work_dir_path) abort
+  call delete(a:work_dir_path, 'rf')
+endfunction
