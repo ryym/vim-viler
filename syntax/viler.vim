@@ -10,7 +10,7 @@ function! s:main() abort
   syntax match VilerLineFile /\v^\s*[^/]+\s\|.+$/
     \ contains=VilerLineMeta
 
-  syntax match VilerLineDirClosed /\v^\s*\zs[^/]+\/\s\|.+0$/
+  syntax match VilerLineDirClosed /\v^\s*\zs[^/]+\/\s\|.+$/
     \ contains=VilerLineMeta
   highlight link VilerLineDirClosed Directory
 
