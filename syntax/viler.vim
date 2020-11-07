@@ -1,16 +1,16 @@
 function! s:main() abort
-  syntax match VilerHeaderLine /\v.+\|\|.+$/
+  syntax match VilerHeaderLine /\v.+\/\|.+$/
     \ contains=VilerFilerMeta
   highlight link VilerHeaderLine Comment
 
-  syntax match VilerFilerMeta /\v\|\|\d+_\d+/
+  syntax match VilerFilerMeta /\v\/\|\d+_\d+/
     \ contained
     \ conceal
 
   syntax match VilerLineFile /\v^\s*[^/]+\s\|.+$/
     \ contains=VilerLineMeta
 
-  syntax match VilerLineDirClosed /\v^\s*\zs[^/]+\/\s\|.+0$/
+  syntax match VilerLineDirClosed /\v^\s*\zs[^/]+\/\s\|.+$/
     \ contains=VilerLineMeta
   highlight link VilerLineDirClosed Directory
 

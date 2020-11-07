@@ -2,7 +2,7 @@ let s:suite = themis#suite('Bufs')
 let s:assert = themis#helper('assert')
 
 let s:hooks = g:t.hooks()
-let s:bufs = g:t.use_buffers(s:hooks)
+let s:bufs = g:t.use_buffers(s:hooks, {})
 
 call s:hooks.register_to(s:suite)
 

@@ -28,6 +28,10 @@ function! s:Buffer.nr() abort
   return self._nr
 endfunction
 
+function! s:Buffer.exists() abort
+  return bufexists(self._nr)
+endfunction
+
 function! s:Buffer.lnum_first() abort
   return 2
 endfunction
@@ -41,6 +45,10 @@ endfunction
 
 function! s:Buffer.lnum_cursor() abort
   return line('.')
+endfunction
+
+function! s:Buffer.colnum_cursor() abort
+  return col('.')
 endfunction
 
 function! s:Buffer.put_cursor(lnum, col) abort
@@ -66,16 +74,12 @@ function! s:Buffer.node_lnum(node_id) abort
   let l = 1 " Skip the first line which contains buffer metadata.
   while l < self.lnum_last()
     let l += 1
-    let row = self.node_row(l)
+    let row = self.row_info(l)
     if row.node_id is# a:node_id
       return l
     endif
   endwhile
   return 0
-endfunction
-
-function! s:Buffer.shown_row_count() abort
-  return self.lnum_last() - self.lnum_first() + 1
 endfunction
 
 function! s:Buffer.display_rows(commit_id, dir_node, rows) abort
@@ -126,14 +130,14 @@ function! s:Buffer.current_dir() abort
   return s:decode_filer_metadata(line)
 endfunction
 
-function! s:Buffer.node_row(lnum) abort
+function! s:Buffer.row_info(lnum) abort
   let linestr = getbufline(self._nr, a:lnum)[0]
   let row = viler#Buffer#decode_node_line(linestr)
   let row.lnum = a:lnum
   return row
 endfunction
 
-function! s:Buffer.update_node_row(node, row, state_changes) abort
+function! s:Buffer.update_row_info(node, row, state_changes) abort
   let state = copy(a:row.state)
   for key in keys(a:state_changes)
     let state[key] = a:state_changes[key]
@@ -167,6 +171,10 @@ function! s:Buffer.redo() abort
   " Decide whether the 'redo'ne buffer should be modified or not.
   " For example, We don't want to make a buffer 'modified' just by 'redo'ing tree toggling.
   let curhead = self.undotree_curhead()
+  if curhead is# 0
+    return
+  endif
+
   let modified = !has_key(curhead, 'save')
   silent redo
   return modified
@@ -232,14 +240,14 @@ function! s:decode_node_line_meta(meta) abort
 endfunction
 
 function! s:filer_metadata(commit_id, dir_node) abort
-  let meta = ' ||' . a:commit_id . '_' . a:dir_node.id
-  return fnamemodify(a:dir_node.abs_path(), ':~') . meta
+  let meta = ' /|' . a:commit_id . '_' . a:dir_node.id
+  return fnamemodify(a:dir_node.abs_path() . '/', ':~') . meta
 endfunction
 
 function! s:decode_filer_metadata(line) abort
   let idx_sep = viler#lib#Str#last_index(a:line, ' ')
   let meta = a:line[idx_sep + 1:]
-  let dir_path = a:line[0:idx_sep - 1]
+  let dir_path = a:line[0:idx_sep - 2] " Remove last '/'
   let [commit_id, node_id] = split(meta[2:], '_')
   return {
     \   'commit_id': str2nr(commit_id),

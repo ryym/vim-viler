@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  # docker-compose run --rm vim-themis path/to/test.vim
+  vim-themis:
+    image: ryym/vim-ci-themis
+    working_dir: /repo
+    volumes:
+      - "./:/repo"
+    environment:
+      TOMLJSON_PATH: '.github/workflows/tomljson'
+
+  neovim-themis:
+    image: ryym/neovim-ci-themis
+    working_dir: /repo
+    volumes:
+      - "./:/repo"
+    environment:
+      TOMLJSON_PATH: '.github/workflows/tomljson'

@@ -35,12 +35,15 @@ function! s:Flist.get(lnum) abort
   return self._rows[a:lnum]
 endfunction
 
+function! s:Flist.lines() abort
+  return map(copy(self._rows), {_, r -> s:row_to_s(r)})
+endfunction
+
 function! s:Flist.to_s() abort
   if self.len() is# 0
     return ''
   endif
-  let s_rows = map(copy(self._rows), {_, r -> s:row_to_s(r)})
-  return "\n" . join(s_rows, "\n") . "\n"
+  return "\n" . join(self.lines(), "\n") . "\n"
 endfunction
 
 function! s:Flist.iter() abort

@@ -1,9 +1,9 @@
 let s:Filer = {}
 
-function! viler#Filer#new(commit_id, buf, node_accessor, dirty_checker) abort
+function! viler#Filer#new(commit_id, buf, node_store, dirty_checker) abort
   let filer = deepcopy(s:Filer)
   let filer._buf = a:buf
-  let filer._nodes = a:node_accessor
+  let filer._nodes = a:node_store
   let filer._diff_checker = a:dirty_checker
   let filer._commit_id = a:commit_id
   let filer._commit_state = {'undo_seq_last': 0}
@@ -25,12 +25,27 @@ function! s:Filer.commit(commit_id) abort
   let undotree = self._buf.undotree()
   let self._commit_state = { 'undo_seq_last': undotree.seq_last + 1 }
 
-  call self.refresh()
-endfunction
+  let lnum_cursor = self._buf.lnum_cursor()
+  let cursor_abs_path = self._abs_path_of_row(lnum_cursor)
 
-function! s:Filer.buf_state() abort
-  let cur_dir = self._buf.current_dir()
-  return { 'commit_id': cur_dir.commit_id }
+  call self.refresh()
+
+  " Adjust the cursor position. For example if you add a new file and save,
+  " the files are sorted at refresh() and the added file may move to the different line.
+  " In this case the cursor should be moved as well to the line of that file.
+  if bufnr('%') is# self._buf.nr() && lnum_cursor >= self._buf.lnum_first()
+    let colnum = self._buf.colnum_cursor()
+    let l = self._buf.lnum_first()
+    while l <= self._buf.lnum_last()
+      let row = self._buf.row_info(l)
+      let node = self._nodes.get_node(row.node_id)
+      if node.abs_path() is# cursor_abs_path
+        call self._buf.put_cursor(l, colnum)
+        break
+      endif
+      let l += 1
+    endwhile
+  endif
 endfunction
 
 function! s:Filer.buffer() abort
@@ -39,12 +54,12 @@ endfunction
 
 function! s:Filer._get_node(node_id, commit_id) abort
   call self._assert_valid_commit_id(a:commit_id)
-  return self._nodes.get(a:node_id)
+  return self._nodes.get_node(a:node_id)
 endfunction
 
 function! s:Filer._get_or_make_node(node_id, commit_id, path) abort
   call self._assert_valid_commit_id(a:commit_id)
-  return self._nodes.get_or_make(a:node_id, a:path)
+  return self._nodes.get_or_make_node(a:node_id, a:path)
 endfunction
 
 function! s:Filer._assert_valid_commit_id(commit_id) abort
@@ -54,16 +69,10 @@ function! s:Filer._assert_valid_commit_id(commit_id) abort
 endfunction
 
 function! s:Filer.display(dir, opts) abort
-  call self._nodes.clear()
-
-  let dir_node = self._nodes.make(a:dir)
-  let rows = self._list_children(a:dir, 0, get(a:opts, 'states', {}))
+  call self._nodes.clear_displayed_nodes()
+  let dir_node = self._nodes.get_or_make_node_from_path(a:dir)
+  let rows = self._list_children(a:dir, 0, a:opts)
   call self._buf.display_rows(self._commit_id, dir_node, rows)
-
-  if !has_key(a:opts, 'states') && bufnr('%') is# self._buf.nr()
-    call self._buf.reset_cursor()
-  endif
-
   return {'dir': dir_node, 'rows': rows}
 endfunction
 
@@ -89,19 +98,51 @@ function! s:Filer.refresh() abort
   let last_lnum = self._buf.lnum_last()
   while lnum < last_lnum
     let lnum += 1
-    let row = self._buf.node_row(lnum)
+    let row = self._buf.row_info(lnum)
 
     " When refreshing after saving, added rows have not corresponding node.
     if has_key(row, 'node_id') && row.bufnr is# self._buf.nr()
-      let node = self._nodes.get(row.node_id)
+      let node = self._nodes.get_node(row.node_id)
       let states[node.abs_path()] = row.state
     endif
   endwhile
 
-  call self.display(cur_dir.path, {'states': states})
+  call self.display(cur_dir.path, {'states': states, 'refresh_nodes': 1})
 endfunction
 
-function! s:Filer._list_children(dir, depth, states) abort
+function! s:Filer._abs_path_of_row(lnum) abort
+  let lfirst = self._buf.lnum_first()
+  if a:lnum < lfirst
+    return self._buf.current_dir().path
+  endif
+
+  let target_row = self._buf.row_info(a:lnum)
+
+  " We do not use node.abs_path() here because the file name
+  " under the cursor may be renamed and is not saved yet.
+
+  let paths = [target_row.name]
+  let depth = target_row.depth
+  let l = a:lnum - 1
+  while lfirst <= l && 0 < depth
+    let row = self._buf.row_info(l)
+    if row.depth < depth
+      call add(paths, row.name)
+      let depth -= 1
+    endif
+    let l -= 1
+  endwhile
+
+  let paths = reverse(paths)
+  let rel_path = paths[0]
+  for name in paths[1:-1]
+    let rel_path = viler#Path#join(rel_path, name)
+  endfor
+
+  return viler#Path#join(self._buf.current_dir().path, rel_path)
+endfunction
+
+function! s:Filer._list_children(dir, depth, opts) abort
   let show_dotfiles = self._config.show_dotfiles
   let rows = []
   for name in viler#lib#Fs#readdir(a:dir)
@@ -110,11 +151,18 @@ function! s:Filer._list_children(dir, depth, states) abort
     endif
     let row = {'props': {'depth': a:depth, 'commit_id': self._commit_id}}
     call add(rows, row)
-    let row.node = self._nodes.make(viler#Path#join(a:dir, name))
+
+    let row.node = self._nodes.get_or_make_node_from_path(viler#Path#join(a:dir, name))
+    call self._nodes.node_displayed(row.node.id, 1)
+    if (get(a:opts, 'refresh_nodes', 0))
+      call row.node.refresh()
+    endif
+
     let node_path = row.node.abs_path()
-    let row.state = get(a:states, node_path, {})
+    let states = get(a:opts, 'states', {})
+    let row.state = get(states, node_path, {})
     if row.node.is_dir && get(row.state, 'tree_open', 0)
-      let row.children = self._list_children(node_path, a:depth + 1, a:states)
+      let row.children = self._list_children(node_path, a:depth + 1, a:opts)
     endif
   endfor
 
@@ -134,7 +182,7 @@ function! s:sort_rows_by_type_and_name(row1, row2) abort
 endfunction
 
 function! s:Filer.open_cursor_file(cmd) abort
-  let row = self._buf.node_row(self._buf.lnum_cursor())
+  let row = self._buf.row_info(self._buf.lnum_cursor())
   if row.is_new
     throw '[viler] This file is not saved yet'
   endif
@@ -142,6 +190,7 @@ function! s:Filer.open_cursor_file(cmd) abort
   let node = self._get_node(row.node_id, row.commit_id)
   if node.is_dir
     call self.display(node.abs_path(), {})
+    call self._buf.reset_cursor()
   else
     execute a:cmd node.abs_path()
   endif
@@ -156,21 +205,10 @@ function! s:Filer.go_up_dir() abort
     throw '[viler] Cannot leave unsaved edited directory'
   endif
 
-  let result = self.display(dir_node.dir, {})
-
-  let prev_dir_node_id = 0
-  for row in result.rows
-    if row.node.name is# dir_node.name
-      let prev_dir_node_id = row.node.id
-      break
-    endif
-  endfor
-
-  if 0 < prev_dir_node_id
-    let lnum = self._buf.node_lnum(prev_dir_node_id)
-    if 0 < lnum
-      call self._buf.put_cursor(lnum, 1)
-    endif
+  call self.display(dir_node.dir, {})
+  let lnum_prev_dir = self._buf.node_lnum(cur_dir.node_id)
+  if 0 < lnum_prev_dir
+    call self._buf.put_cursor(lnum_prev_dir, 1)
   endif
 endfunction
 
@@ -187,7 +225,7 @@ function! s:Filer.toggle_tree_at(lnum) abort
     return
   endif
 
-  let row = self._buf.node_row(a:lnum)
+  let row = self._buf.row_info(a:lnum)
   if !row.is_dir
     return
   endif
@@ -200,11 +238,10 @@ function! s:Filer.toggle_tree_at(lnum) abort
     if self._is_dirty(dir)
       throw '[viler] Cannot close unsaved edited directory'
     endif
-    call self._buf.update_node_row(node, row, {'tree_open': 0})
+    call self._buf.update_row_info(node, row, {'tree_open': 0})
     call self._close_tree(node, row)
   else
-
-    call self._buf.update_node_row(node, row, {'tree_open': 1})
+    call self._buf.update_row_info(node, row, {'tree_open': 1})
     let rows = self._list_children(node.abs_path(), 0, {})
     let nodes = map(rows, 'v:val.node')
     call self._buf.append_nodes(row.lnum, nodes, {
@@ -228,11 +265,11 @@ function! s:Filer._close_tree(dir_node, dir_row) abort
       break
     endif
 
-    let row = self._buf.node_row(l)
+    let row = self._buf.row_info(l)
     if row.depth <=# a:dir_row.depth
       break
     endif
-    call self._nodes.remove(row.node_id)
+    call self._nodes.node_displayed(row.node_id, 0)
   endwhile
   if a:dir_row.lnum + 1 < l
     call self._buf.delete_lines(a:dir_row.lnum + 1, l - 1)
@@ -254,7 +291,7 @@ function! s:Filer.undo() abort
     return
   endif
 
-  call self._nodes.clear()
+  call self._nodes.clear_displayed_nodes()
   call self._restore_nodes_on_buf(prev_dir)
 
   call self._buf.save()
@@ -269,7 +306,7 @@ function! s:Filer.redo() abort
   let prev_dir = self._buf.current_dir()
   let modified = self._buf.redo()
 
-  call self._nodes.clear()
+  call self._nodes.clear_displayed_nodes()
   call self._restore_nodes_on_buf(prev_dir)
 
   if !modified
@@ -289,7 +326,7 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
   let last_l = self._buf.lnum_last()
   while l < last_l
     let l += 1
-    let row = self._buf.node_row(l)
+    let row = self._buf.row_info(l)
 
     if row.is_new
       continue
@@ -307,6 +344,7 @@ function! s:Filer._restore_nodes_on_buf(prev_dir) abort
 
     let file_path = viler#Path#join(dir_path, row.name)
     call self._get_or_make_node(row.node_id, row.commit_id, file_path)
+    call self._nodes.node_displayed(row.node_id, 1)
     let prev_depth = row.depth
     let prev_name = row.name
 

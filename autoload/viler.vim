@@ -37,7 +37,9 @@ function! viler#open(...) abort
   setlocal softtabstop=2
   setlocal expandtab
 
-  if !g:_viler_is_debug
+  if g:_viler_is_debug
+    setlocal conceallevel=0
+  else
     setlocal bufhidden=hide
     setlocal nobuflisted
   endif
@@ -68,6 +70,19 @@ function! s:current_filer() abort
   return filer
 endfunction
 
+function! s:show_error(msg)
+  if g:_viler_is_debug
+    echoerr v:throwpoint ' | ' a:msg
+  else
+    " Beep
+    execute 'normal! \<Esc>'
+    " Show an error message without details.
+    echohl ErrorMsg
+    echomsg a:msg
+    echohl None
+  endif
+endfunction
+
 function! viler#on_buf_enter() abort
   let filer = s:app.filer_for(bufnr('%'))
   if type(filer) is# v:t_number
@@ -81,39 +96,71 @@ function! viler#on_buf_leave() abort
 endfunction
 
 function! viler#on_buf_save() abort
-  call s:app.on_any_buf_save()
+  try
+    call s:app.on_any_buf_save()
+  catch
+    call s:show_error(v:exception)
+  endtry
 endfunction
 
 function! viler#open_cursor_file(...) abort
-  let cmd = get(a:000, 0, 'wincmd w | drop')
-  call s:current_filer().open_cursor_file(cmd)
+  try
+    let cmd = get(a:000, 0, 'wincmd w | drop')
+    call s:current_filer().open_cursor_file(cmd)
+  catch
+    call s:show_error(v:exception)
+  endtry
 endfunction
 
 function! viler#go_up_dir() abort
-  call s:current_filer().go_up_dir()
+  try
+    call s:current_filer().go_up_dir()
+  catch
+    call s:show_error(v:exception)
+  endtry
 endfunction
 
 function! viler#toggle_tree() abort
-  call s:current_filer().toggle_tree()
+  try
+    call s:current_filer().toggle_tree()
+  catch
+    call s:show_error(v:exception)
+  endtry
 endfunction
 
 function! viler#undo() abort
-  call s:current_filer().undo()
+  try
+    call s:current_filer().undo()
+  catch
+    call s:show_error(v:exception)
+  endtry
 endfunction
 
 function! viler#redo() abort
-  call s:current_filer().redo()
+  try
+    call s:current_filer().redo()
+  catch
+    call s:show_error(v:exception)
+  endtry
 endfunction
 
 function! viler#refresh() abort
-  call s:current_filer().refresh()
+  try
+    call s:current_filer().refresh()
+  catch
+    call s:show_error(v:exception)
+  endtry
 endfunction
 
 function! viler#toggle_dotfiles() abort
-  let filer = s:current_filer()
-  let conf = filer.config()
-  call filer.modify_config({'show_dotfiles': !conf.show_dotfiles})
-  call filer.refresh()
+  try
+    let filer = s:current_filer()
+    let conf = filer.config()
+    call filer.modify_config({'show_dotfiles': !conf.show_dotfiles})
+    call filer.refresh()
+  catch
+    call s:show_error(v:exception)
+  endtry
 endfunction
 
 function! viler#delete_old_backups() abort

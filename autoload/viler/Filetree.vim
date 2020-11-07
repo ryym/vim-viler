@@ -14,12 +14,12 @@ function! s:Filetree.current_dir_path() abort
 endfunction
 
 function! s:Filetree.associated_node(row) abort
-  return self._node_store.get_node(a:row.bufnr, a:row.node_id)
+  return self._node_store.get_node(a:row.node_id)
 endfunction
 
 function! s:Filetree.has_node_for(path) abort
-  let node = self._node_store.try_get_node_from_path(self._buf.nr(), a:path)
-  return type(node) isnot# v:t_number
+  let node = self._node_store.try_get_node_from_path(a:path)
+  return type(node) isnot# v:t_number && self._node_store.should_be_displayed(node.id)
 endfunction
 
 function! s:Filetree.iter() abort
@@ -49,7 +49,7 @@ function! s:Iter.lnum() abort
 endfunction
 
 function! s:Iter.peek() abort
-  return self.filetree._buf.node_row(self._lnum)
+  return self.filetree._buf.row_info(self._lnum)
 endfunction
 
 function! s:Iter.next() abort

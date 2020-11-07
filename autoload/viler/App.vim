@@ -34,13 +34,12 @@ function! s:App.create_filer(dir) abort
   let bufnr = bufnr('%')
   call buffer.bind(bufnr)
 
-  let node_accessor = self._node_store.accessor_for(bufnr)
   let diff_checker = viler#diff#Checker#new(self._node_store)
 
   let filer = viler#Filer#new(
     \   self._commit_id,
     \   buffer,
-    \   node_accessor,
+    \   self._node_store,
     \   diff_checker,
     \ )
   let self._filers[bufnr] = filer
@@ -66,8 +65,14 @@ function! s:App.filer_for(bufnr) abort
   return get(self._filers, a:bufnr, 0)
 endfunction
 
+
+function! s:App._valid_filers() abort
+  return filter(copy(self._filers), 'v:val.buffer().exists()')
+endfunction
+
 function! s:App.on_any_buf_save() abort
-  let modified_filers = filter(copy(values(self._filers)), 'v:val.buffer().modified()')
+  let filers = self._valid_filers()
+  let modified_filers = filter(copy(values(filers)), 'v:val.buffer().modified()')
 
   call self._apply_changes(modified_filers)
   let self._commit_id += 1
@@ -75,7 +80,7 @@ function! s:App.on_any_buf_save() abort
   let current_bufnr = bufnr('%')
 
   " Update all filers to synchronize latest commit id.
-  for filer in values(self._filers)
+  for filer in values(filers)
     let buf = filer.buffer()
     execute 'silent keepalt buffer' buf.nr()
     silent noautocmd update
