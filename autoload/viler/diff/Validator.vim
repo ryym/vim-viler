@@ -88,15 +88,13 @@ function! s:Validator._validate_dirop(diff, op, errs) abort
   let files = {}
   let dir_path = a:op.path
 
-  if !isdirectory(dir_path)
-    return
+  if isdirectory(dir_path)
+    for name in viler#lib#Fs#readdir(dir_path)
+      let full_path = viler#Path#join(dir_path, name)
+      let is_dir = isdirectory(full_path)
+      let files[full_path] = 1
+    endfor
   endif
-
-  for name in viler#lib#Fs#readdir(dir_path)
-    let full_path = viler#Path#join(dir_path, name)
-    let is_dir = isdirectory(full_path)
-    let files[full_path] = 1
-  endfor
 
   for move_id in a:op.move_to
     let move = a:diff.moves[move_id]
