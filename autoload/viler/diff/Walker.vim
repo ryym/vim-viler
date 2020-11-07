@@ -49,6 +49,9 @@ function! s:Walker._walk_tree(dir, iter, ctx) abort
     let src_path = node.abs_path()
 
     if src_path is# row_path
+      if node.is_dir != row.is_dir
+        throw '[viler] You cannot change file to directory or vice versa.'
+      endif
       let unchanged_files[row.name] = 1
       if row.is_dir && row.state.tree_open
         let dir = s:next_dir_info(a:dir, src_path)
