@@ -9,6 +9,12 @@ function! viler#Buffer#new() abort
   " I could not find a way to get the last lnum of non-current buffer.
   let buffer._lnum_last = 0
 
+  " This dictionary stores node ids currently displayed in the buffer.
+  " But it does not track row additions and deletions by editing.
+  " So you can know a row is deleted if the node id exists in this dictionary
+  " but it does not exist on the buffer.
+  let buffer._displayed_nodes = {}
+
   return buffer
 endfunction
 
@@ -89,6 +95,7 @@ function! s:Buffer.display_rows(commit_id, dir_node, rows) abort
 
   call viler#lib#Buf#set_lines(self._nr, 1, [s:filer_metadata(a:commit_id, a:dir_node)])
 
+  let self._displayed_nodes = {}
   let lines = []
   call self._rows_to_lines(a:rows, lines)
 
@@ -109,6 +116,7 @@ endfunction
 
 function! s:Buffer._rows_to_lines(rows, lines) abort
   for row in a:rows
+    let self._displayed_nodes[row.node.id] = 1
     call add(a:lines, self._node_to_line(row.node, row.props, row.state))
     if has_key(row, 'children')
       call self._rows_to_lines(row.children, a:lines)
@@ -117,12 +125,28 @@ function! s:Buffer._rows_to_lines(rows, lines) abort
 endfunction
 
 function! s:Buffer.append_nodes(lnum, nodes, props) abort
+  for node in a:nodes
+    let self._displayed_nodes[node.id] = 1
+  endfor
+
   let lines = map(copy(a:nodes), {_, n -> self._node_to_line(n, a:props, {})})
   call append(a:lnum, lines)
 endfunction
 
 function! s:Buffer.delete_lines(first, last) abort
+  let l = a:first
+  while l <= a:last
+    let row = self.row_info(l)
+    if has_key(self._displayed_nodes, row.node_id)
+      call remove(self._displayed_nodes, row.node_id)
+    endif
+    let l += 1
+  endwhile
   call viler#lib#Buf#delete_lines(self._nr, a:first, a:last)
+endfunction
+
+function! s:Buffer.should_be_displayed(node_id)
+  return has_key(self._displayed_nodes, a:node_id)
 endfunction
 
 function! s:Buffer.current_dir() abort
@@ -137,6 +161,7 @@ function! s:Buffer.row_info(lnum) abort
   return row
 endfunction
 
+" NOTE: You must not associate the different node to a row using this method.
 function! s:Buffer.update_row_info(node, row, state_changes) abort
   let state = copy(a:row.state)
   for key in keys(a:state_changes)
@@ -165,6 +190,7 @@ endfunction
 
 function! s:Buffer.undo() abort
   silent undo
+  call self._restore_displayed_nodes()
 endfunction
 
 function! s:Buffer.redo() abort
@@ -177,7 +203,21 @@ function! s:Buffer.redo() abort
 
   let modified = !has_key(curhead, 'save')
   silent redo
+  call self._restore_displayed_nodes()
   return modified
+endfunction
+
+function! s:Buffer._restore_displayed_nodes() abort
+  let self._displayed_nodes = {}
+  let l = self.lnum_first() - 1
+  let last_l = self.lnum_last()
+  while l < last_l
+    let l += 1
+    let row = self.row_info(l)
+    if !row.is_new
+      let self._displayed_nodes[row.node_id] = 1
+    endif
+  endwhile
 endfunction
 
 function! s:Buffer._node_to_line(node, props, state) abort
