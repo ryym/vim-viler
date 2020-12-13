@@ -36,11 +36,11 @@ function! viler#open(...) abort
   setlocal shiftwidth=2
   setlocal softtabstop=2
   setlocal expandtab
+  setlocal bufhidden=hide
 
   if g:_viler_is_debug
     setlocal conceallevel=0
   else
-    setlocal bufhidden=hide
     setlocal nobuflisted
   endif
 
