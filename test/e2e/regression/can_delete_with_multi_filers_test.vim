@@ -2,7 +2,7 @@ let s:suite = themis#suite('E2E')
 let s:assert = themis#helper('assert')
 let s:t = viler#testutil#e2e#setup(s:suite)
 
-function! s:suite.can_delete_with_multi_filers() abort
+function! s:suite.regression__can_delete_with_multi_filers() abort
   call s:t.work_dir.make_files([
     \   'd1/',
     \   '  a content:aaa',

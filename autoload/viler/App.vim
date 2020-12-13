@@ -82,7 +82,8 @@ function! s:App.on_any_buf_save() abort
   " Update all filers to synchronize latest commit id.
   for filer in values(filers)
     let buf = filer.buffer()
-    execute 'silent keepalt buffer' buf.nr()
+    " call g:t.log('before keepalt', buf.nr())
+    execute 'silent keepalt buffer!' buf.nr()
     silent noautocmd update
     call filer.commit(self._commit_id)
   endfor
