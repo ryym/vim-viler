@@ -14,7 +14,7 @@ function! viler#testutil#e2e#setup(suite) abort
   endfunction
 
   " Manage buffers to clean up after each test.
-  call g:t.use_buffers(s:hooks, { 'auto_add_current_buf': 1 })
+  let bufs = g:t.use_buffers(s:hooks, { 'auto_add_current_buf': 1 })
 
   " Create a working directory.
   let work_dir = g:t.use_work_dir(s:hooks)
@@ -23,6 +23,7 @@ function! viler#testutil#e2e#setup(suite) abort
 
   let t = copy(s:E2eTestUtil)
   let t.work_dir = work_dir
+  let t.bufs = bufs
   return t
 endfunction
 
