@@ -1,12 +1,3 @@
-## 0.0.1 (2019-11-24)
-
-- Initial version
-
-## 0.0.2 (2020-11-1)
-
-- Fix some bugs
-- Update help doc
-
 ## 0.1.0 (2020-11-7)
 
 features:
@@ -21,3 +12,12 @@ fixes:
 - Do not throw at redo when no undo history exists.
 - Fix some invalid syntax highlights.
 - Ignore removed filer buffers.
+
+## 0.0.2 (2020-11-1)
+
+- Fix some bugs
+- Update help doc
+
+## 0.0.1 (2019-11-24)
+
+- Initial version
