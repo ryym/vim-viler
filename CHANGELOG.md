@@ -1,3 +1,9 @@
+## 0.1.1 (2020-12-13)
+
+fixes:
+
+- Manage displayed nodes per buffer [#1](https://github.com/ryym/vim-viler/pull/1)
+
 ## 0.1.0 (2020-11-7)
 
 features:

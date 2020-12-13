@@ -8,7 +8,7 @@ Viler is a file explorer plugin for Vim, with an ability of editing directory st
 
 ## Status
 
-v0.1.0 (Beta version)
+v0.1.1 (Beta version)
 
 Currently basic file operations (adding, copying, moving, deleting) should work well.
 
