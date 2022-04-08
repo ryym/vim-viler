@@ -1,3 +1,9 @@
+# 0.1.2 (2022-04-08)
+
+fixes:
+
+- Open files correctly whose name contains special characters [dc23665c](https://github.com/ryym/vim-viler/commit/dc23665c8abca629e03c0b2cea2450e5aa107af5)
+
 ## 0.1.1 (2020-12-13)
 
 fixes:

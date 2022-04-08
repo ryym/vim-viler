@@ -1,6 +1,6 @@
 *viler.txt*	Editable file explorer
 
-Version: 0.1.1
+Version: 0.1.2
 Author: ryym <ryym.64@gmail.com>
 
 ==============================================================================
