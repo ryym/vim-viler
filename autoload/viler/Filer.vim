@@ -190,7 +190,7 @@ function! s:Filer.open_cursor_file(cmd) abort
     call self.display(node.abs_path(), {})
     call self._buf.reset_cursor()
   else
-    execute a:cmd node.abs_path()
+    execute a:cmd fnameescape(node.abs_path())
   endif
 endfunction
 

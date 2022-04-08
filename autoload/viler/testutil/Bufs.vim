@@ -19,7 +19,7 @@ endfunction
 
 function! s:Bufs.open() abort
   let self._id += 1
-  silent execute 'edit' viler#Path#join(self.work_dir, self._id)
+  silent execute 'edit' fnameescape(viler#Path#join(self.work_dir, self._id))
   let bufnr = bufnr('%')
   call add(self._bufnrs, bufnr)
   return bufnr

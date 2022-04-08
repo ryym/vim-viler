@@ -28,7 +28,7 @@ endfunction
 function! s:App.create_filer(dir) abort
   let self._filer_id += 1
   let temp_file = self._work_dir . '/' . string(self._filer_id) . '.viler'
-  execute 'silent edit' temp_file
+  execute 'silent edit' fnameescape(temp_file)
 
   let buffer = viler#Buffer#new()
   let bufnr = bufnr('%')
