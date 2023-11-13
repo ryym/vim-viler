@@ -37,7 +37,7 @@ function! s:open_dir_highlight() abort
   let dir_hl = split(dir_hl, '\s\+')
   let dir_hl = dir_hl[2:]
 
-  return join(dir_hl, ' ') . ' cterm=underline'
+  return join(dir_hl, ' ') . ' cterm=underline gui=underline'
 endfunction
 
 call s:main()
