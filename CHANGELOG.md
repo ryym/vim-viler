@@ -1,3 +1,9 @@
+# 0.1.3 (2023-11-13)
+
+fixes:
+
+- Underline the open directory on GUI [3aaf9e1](https://github.com/ryym/vim-viler/commit/3aaf9e1f418bb71cf91f01e1536146f370270621)
+
 # 0.1.2 (2022-04-08)
 
 fixes:
